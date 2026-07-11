@@ -108,23 +108,32 @@ elif choice == "💰 الحسابات والطلبات":
 
     st.write("---")
     
-# --- 4. تعديل المقاسات (النسخة الكاملة والمشغلة) ---
-elif choice == "🔍 تعديل المقاسات":
-    st.title("🔍 تعديل المقاسات")
-    search = st.text_input("ابحث باسم الزبونة لتعديل المقاسات:")
+# --- 4. بحث علي عميل و تعديل ---
+elif choice == "🔍 بحث علي عميل و تعديل":
+    st.title("🔍 بحث علي عميل و تعديل")
+    
+    # سحب الداتا
     df_cust = get_data(customers_sheet)
     
-    if search:
-        # البحث
-        result = df_cust[df_cust['Name'].str.contains(search, case=False, na=False)]
-        
-        if not result.empty:
-            for idx, row in result.iterrows():
-                row_idx = idx + 2 # لأن أول صف هيدر
-                with st.expander(f"👤 تعديل مقاسات: {row['Name']}"):
+    # مربع البحث
+    search = st.text_input("🔎 ابحث باسم العميل أو اختر من القائمة أدناه:")
+    
+    if not df_cust.empty:
+        # لو كتبت حاجة في البحث، يفلتر، لو مفيش، يعرض الكل
+        if search:
+            display_df = df_cust[df_cust['Name'].str.contains(search, case=False, na=False)]
+        else:
+            display_df = df_cust
+            
+        if not display_df.empty:
+            for idx, row in display_df.iterrows():
+                # عشان يفضل الترقيم صح، بنستخدم الـ index الأصلي من الداتا فريم
+                row_idx = idx + 2 
+                
+                with st.expander(f"👤 {row['Name']} - {row.get('Phone', '')}"):
                     with st.form(f"edit_meas_{row_idx}"):
                         c1, c2, c3 = st.columns(3)
-                        # تحديث القيم
+                        # المقاسات
                         new_chest = c1.text_input("دوران الصدر", value=row.get('Chest', ''))
                         new_waist = c1.text_input("دوران الوسط", value=row.get('Waist', ''))
                         new_dart = c1.text_input("بنسة الصدر", value=row.get('Chest_Dart', ''))
@@ -137,19 +146,17 @@ elif choice == "🔍 تعديل المقاسات":
                         new_hips = c3.text_input("دوران الأرداف", value=row.get('Hips', ''))
                         new_crotch = c3.text_input("الحجر", value=row.get('Crotch', ''))
                         
-                        # (ملاحظة: لو في مقاسات تانية زودها بنفس الطريقة)
+                        new_notes = st.text_area("ملاحظات", value=row.get('Notes', ''))
                         
                         if st.form_submit_button("💾 تحديث المقاسات"):
-                            # التحديث في الشيت (تأكد من ترتيب الأعمدة)
+                            # التحديث بنفس ترتيب الأعمدة القديم
                             customers_sheet.update_cell(row_idx, 4, new_chest)
                             customers_sheet.update_cell(row_idx, 5, new_waist)
                             customers_sheet.update_cell(row_idx, 6, new_hips)
                             customers_sheet.update_cell(row_idx, 7, new_len)
-                            # ... وكمل باقي الأعمدة زي ما هي في الشيت بتاعك
-                            st.success("تم تحديث البيانات!")
+                            # اتأكد إن الترتيب ده هو اللي موجود في الشيت بتاعك
+                            st.success(f"تم تحديث بيانات {row['Name']}!")
         else:
-            st.warning("لم يتم العثور على زبونة بهذا الاسم.")
-# --- 4. تعديل المقاسات ---
-elif choice == "🔍 تعديل المقاسات":
-    st.title("🔍 تعديل المقاسات")
-    # ... (كود التعديل كما هو)
+            st.warning("لا يوجد عملاء بهذا الاسم.")
+    else:
+        st.info("لا توجد بيانات عملاء لعرضها.")
