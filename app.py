@@ -5,7 +5,7 @@ from datetime import datetime
 
 # 1️⃣ إعدادات واجهة الصفحة بالكامل لشكل احترافي باللغة العربية
 st.set_page_config(
-    page_title="Lobna's system",
+    page_title="Nany's Atelier",
     page_icon="👗",
     layout="wide",
     initial_sidebar_state="expanded"
