@@ -5,7 +5,7 @@ from datetime import datetime
 
 # 1️⃣ إعدادات واجهة الصفحة بالكامل لشكل احترافي باللغة العربية
 st.set_page_config(
-    page_title="نظام إدارة وتفصيل أتيليه الملكة",
+    page_title="lobna's System",
     page_icon="👗",
     layout="wide",
     initial_sidebar_state="expanded"
