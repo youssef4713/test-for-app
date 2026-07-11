@@ -14,37 +14,38 @@ try:
     customers_sheet = sh.worksheet("customers")
     bookings_sheet = sh.worksheet("bookings")
 except Exception as e:
-    st.error(f"خطأ في الاتصال: {e}")
+    st.error(f"خطأ في الاتصال بالسيرفر: {e}")
     st.stop()
 
-# دالة سحب داتا
+# دالة سحب داتا فورية
 def get_data(sheet):
     raw_data = sheet.get_all_values()
     if len(raw_data) > 1:
         return pd.DataFrame(raw_data[1:], columns=raw_data[0])
     return pd.DataFrame()
 
-# التنقل
-choice = st.sidebar.selectbox("🧭 القائمة الرئيسية:", ["📊 لوحة التحكم", "➕ تسجيل عميلة جديدة", "🔍 بحث وتعديل"])
+# التنقل (القائمة الجانبية)
+choice = st.sidebar.selectbox("🧭 القائمة الرئيسية:", ["📊 لوحة التحكم", "➕ تسجيل عميلة جديدة", "💰 الحسابات والطلبات", "🔍 بحث وتعديل"])
 
 # --- 1. لوحة التحكم ---
 if choice == "📊 لوحة التحكم":
-    st.title("📊 لوحة تحكم الأتيليه")
+    st.title("📊 ملخص الأتيليه المالي")
     df_book = get_data(bookings_sheet)
     if not df_book.empty:
         df_book['Paid'] = pd.to_numeric(df_book['Paid'], errors='coerce').fillna(0)
         df_book['Remaining'] = pd.to_numeric(df_book['Remaining'], errors='coerce').fillna(0)
+        
         c1, c2, c3 = st.columns(3)
         c1.metric("إجمالي التحصيل", f"{df_book['Paid'].sum():,.0f} ج.م")
         c2.metric("إجمالي المتبقي", f"{df_book['Remaining'].sum():,.0f} ج.م")
-        c3.metric("عدد الطلبات", len(df_book))
-        st.dataframe(df_book, use_container_width=True)
+        c3.metric("عدد الطلبات الكلي", len(df_book))
+    st.info("هذا الملخص يعتمد على بيانات شيت الطلبات (bookings).")
 
 # --- 2. تسجيل عميلة جديدة ---
 elif choice == "➕ تسجيل عميلة جديدة":
     st.title("➕ تسجيل بيانات العميل والطلب")
     with st.form("new_entry", clear_on_submit=True):
-        tab1, tab2, tab3 = st.tabs(["👤 البيانات الأساسية", "📐 المقاسات (14 خانة)", "💰 الحسابات"])
+        tab1, tab2, tab3 = st.tabs(["👤 البيانات الأساسية", "📐 المقاسات", "💰 الحسابات والملاحظات"])
         with tab1:
             name = st.text_input("اسم الزبونة")
             phone = st.text_input("التليفون")
@@ -55,28 +56,56 @@ elif choice == "➕ تسجيل عميلة جديدة":
             chest_dart = c1.text_input("بنسة الصدر")
             length = c2.text_input("الطول الكلي")
             sleeve_width = c2.text_input("عرض الكم")
-            neck_to_waist = c2.text_input("طول الرقبة للوسط")
-            waist_to_bottom = c3.text_input("طول الوسط لأسفل")
+            neck_to_waist = c2.text_input("طول من الرقبة للوسط")
+            waist_to_bottom = c3.text_input("طول من الوسط لأسفل")
             hips = c3.text_input("دوران الأرداف")
             crotch = c3.text_input("الحجر")
             inseam = c3.text_input("الحجر الداخلي")
             thigh_width = c3.text_input("عرض الفخذ")
             thigh_length_k = c3.text_input("طول الفخذ للركبة")
         with tab3:
+            dress_details = st.text_area("تفاصيل الفستان والموديل")
             total_price = st.number_input("المبلغ الكلي", min_value=0)
             paid = st.number_input("المبلغ المدفوع", min_value=0)
             status = st.selectbox("حالة الطلب", ["تحت التنفيذ", "جاهز", "تم التسليم"])
-            notes = st.text_area("ملاحظات")
+            notes = st.text_area("ملاحظات إضافية")
         
         if st.form_submit_button("💾 حفظ البيانات"):
             customers_sheet.append_row(["QS-NEW", name, phone, chest, waist, hips, length, neck_to_waist, waist_to_bottom, crotch, inseam, thigh_width, thigh_length_k, chest_dart, sleeve_width, notes, datetime.now().strftime("%Y-%m-%d")])
-            bookings_sheet.append_row(["BK-NEW", name, phone, "فستان", total_price, paid, (total_price - paid), status, datetime.now().strftime("%Y-%m-%d")])
-            st.success("تم الحفظ!")
+            bookings_sheet.append_row(["BK-NEW", name, phone, dress_details, total_price, paid, (total_price - paid), status, datetime.now().strftime("%Y-%m-%d")])
+            st.success("تم الحفظ بنجاح!")
 
-# --- 3. بحث وتعديل (مفصلة) ---
+# --- 3. الحسابات والطلبات (الصفحة الجديدة) ---
+elif choice == "💰 الحسابات والطلبات":
+    st.title("💰 سجل الحسابات وتفاصيل الفساتين")
+    df_book = get_data(bookings_sheet)
+    search = st.text_input("ابحث عن عميل داخل السجل:")
+    
+    if not df_book.empty:
+        # فلترة
+        if search:
+            df_book = df_book[df_book['Name'].str.contains(search, case=False, na=False)]
+        
+        for _, row in df_book.iterrows():
+            with st.expander(f"👗 طلب العميل: {row.get('Name', 'بدون اسم')}"):
+                c1, c2 = st.columns(2)
+                with c1:
+                    st.write(f"**👤 اسم العميل:** {row.get('Name', '-')}")
+                    st.write(f"**📱 التليفون:** {row.get('Phone', '-')}")
+                    st.write(f"**📝 تفاصيل الفستان:** {row.get('Dress_Details', '-')}")
+                    st.write(f"**📅 التاريخ:** {row.get('Date', '-')}")
+                with c2:
+                    st.write(f"**💰 المبلغ الكلي:** {row.get('Total_Price', '0')} ج.م")
+                    st.write(f"**💸 المبلغ المدفوع:** {row.get('Paid', '0')} ج.م")
+                    st.write(f"**⚠️ المبلغ المتبقي:** {row.get('Remaining', '0')} ج.م")
+                    st.write(f"**🛠️ الحالة:** {row.get('Status', '-')}")
+    else:
+        st.info("لا توجد طلبات.")
+
+# --- 4. بحث وتعديل المقاسات ---
 elif choice == "🔍 بحث وتعديل":
-    st.title("🔍 البحث وتعديل البيانات")
-    search = st.text_input("ابحث باسم الزبونة:")
+    st.title("🔍 بحث وتعديل المقاسات")
+    search = st.text_input("ابحث باسم الزبونة لتعديل المقاسات:")
     df_cust = get_data(customers_sheet)
     
     if search:
@@ -84,10 +113,10 @@ elif choice == "🔍 بحث وتعديل":
         if not result.empty:
             for idx, row in result.iterrows():
                 row_idx = idx + 2
-                with st.expander(f"👤 تعديل بيانات: {row['Name']}"):
+                with st.expander(f"👤 تعديل مقاسات: {row['Name']}"):
                     with st.form(f"edit_form_{row_idx}"):
                         c1, c2, c3 = st.columns(3)
-                        # تحديث البيانات الأساسية والمقاسات
+                        # عرض شامل لكل التفاصيل
                         with c1:
                             v_phone = st.text_input("التليفون", row.get('Phone', ''))
                             v_chest = st.text_input("دوران الصدر", row.get('Chest', ''))
@@ -96,7 +125,7 @@ elif choice == "🔍 بحث وتعديل":
                         with c2:
                             v_len = st.text_input("الطول الكلي", row.get('Length', ''))
                             v_neck = st.text_input("طول الرقبة للوسط", row.get('Neck_to_Waist', ''))
-                            v_waist_bot = st.text_input("طول الوسط لأسفل", row.get('Waist_to_Bottom', ''))
+                            v_waist_bot = st.text_input("طول الوسط لأسفل", row.get('Waist_to_Botton', ''))
                             v_crotch = st.text_input("الحجر", row.get('Crotch', ''))
                         with c3:
                             v_inseam = st.text_input("الحجر الداخلي", row.get('Inseam', ''))
@@ -107,8 +136,7 @@ elif choice == "🔍 بحث وتعديل":
                         
                         v_notes = st.text_area("ملاحظات", row.get('Notes', ''))
                         
-                        if st.form_submit_button("💾 تحديث كل البيانات"):
-                            # تحديث كل الأعمدة (الترتيب: Name(2), Phone(3), Chest(4), Waist(5), Hips(6), Length(7)...)
+                        if st.form_submit_button("💾 تحديث المقاسات"):
                             customers_sheet.update_cell(row_idx, 3, v_phone)
                             customers_sheet.update_cell(row_idx, 4, v_chest)
                             customers_sheet.update_cell(row_idx, 5, v_waist)
@@ -124,5 +152,3 @@ elif choice == "🔍 بحث وتعديل":
                             customers_sheet.update_cell(row_idx, 15, v_sleeve)
                             customers_sheet.update_cell(row_idx, 16, v_notes)
                             st.success("تم التحديث!")
-        else:
-            st.warning("لم يتم العثور على نتائج.")
