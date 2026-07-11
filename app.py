@@ -5,7 +5,7 @@ from datetime import datetime
 
 # 1️⃣ إعدادات واجهة الصفحة بالكامل لشكل احترافي باللغة العربية
 st.set_page_config(
-    page_title="Nany's Atelier",
+    page_title="Lobna's system",
     page_icon="👗",
     layout="wide",
     initial_sidebar_state="expanded"
@@ -38,11 +38,32 @@ try:
         bookings_sheet = sh.worksheet("bookings")
     except gspread.exceptions.WorksheetNotFound:
         bookings_sheet = sh.add_worksheet(title="bookings", rows="1000", cols="15")
-        bookings_sheet.append_row(["Booking_ID", "Customer_Name", "Phone", "Dress_Code", "Total_Price", "Paid", "Remaining", "Status"])
+        bookings_sheet.append_row(["Booking_ID", "Customer_Name", "Phone", "Dress_Code", "Total_Price", "Paid", "Remaining", "Status", "Date"])
         
 except Exception as e:
     st.error(f"❌ هناك مشكلة في الاتصال بجوجل كلاود، تأكد من إعدادات الـ Secrets. الخطأ: {e}")
     st.stop()
+
+
+# 💡 دالة ذكية وقوية لجلب البيانات على هيئة DataFrame بأمان وبدون أخطاء الـ GSpreadException
+def get_dataframe_safely(sheet, default_columns):
+    try:
+        raw_data = sheet.get_all_values()
+        if len(raw_data) > 1:
+            # أخذ الصف الأول كعناوين والأعمدة الباقية كبيانات
+            df = pd.DataFrame(raw_data[1:], columns=raw_data[0])
+            # تنظيف أسماء الأعمدة من أي مسافات زائدة
+            df.columns = df.columns.str.strip()
+            return df
+        else:
+            return pd.DataFrame(columns=default_columns)
+    except Exception:
+        return pd.DataFrame(columns=default_columns)
+
+
+# جلب البيانات بشكل آمن في أول الكود للاستخدام العام
+df_cust = get_dataframe_safely(customers_sheet, ["Customer_ID", "Name", "Phone", "Chest", "Waist", "Hips", "Shoulder", "Total_Length", "Sleeve", "Notes", "Date"])
+df_book = get_dataframe_safely(bookings_sheet, ["Booking_ID", "Customer_Name", "Phone", "Dress_Code", "Total_Price", "Paid", "Remaining", "Status", "Date"])
 
 
 # 3️⃣ تصميم القائمة الجانبية للتنقل (Sidebar)
@@ -52,7 +73,7 @@ st.sidebar.write("---")
 
 choice = st.sidebar.selectbox(
     "🧭 اختر الصفحة أو العملية:", 
-    ["📊 لوحة التحكم الإحصائية", "➕ تسجيل زبونة جديدة", "🔍 البحث عن مقاسات زبونة"]
+    ["📊 لوحة التحكم الإحصائية", "➕ تسجيل زبونة جديدة", "👗 تسجيل حجز جديد", "🔍 البحث عن مقاسات زبونة"]
 )
 
 
@@ -61,14 +82,7 @@ if choice == "📊 لوحة التحكم الإحصائية":
     st.title("📊 المؤشرات العامة وحالة الأتيليه الحالية")
     st.write("ملخص سريع للحسابات والحجوزات المسجلة في قاعدة البيانات:")
     
-    # جلب البيانات من الشيتس
-    all_customers = customers_sheet.get_all_records()
-    all_bookings = bookings_sheet.get_all_records()
-    
-    df_cust = pd.DataFrame(all_customers)
-    df_book = pd.DataFrame(all_bookings)
-    
-    # حساب المؤشرات المالية بشكل تلقائي وأمن
+    # حساب المؤشرات المالية بشكل تلقائي وأمن من الـ DataFrame النظيف
     total_paid = 0.0
     total_remaining = 0.0
     active_bookings_count = 0
@@ -124,19 +138,62 @@ elif choice == "➕ تسجيل زبونة جديدة":
             if not name or not phone:
                 st.error("❌ خطأ: يجب كتابة اسم الزبونة ورقم التليفون على الأقل لحفظ الملف!")
             else:
-                # حساب الرقم التعريفي للزبونة تلقائياً على حسب عدد السطور في الجدول
                 total_rows = len(customers_sheet.get_all_values())
                 customer_id = f"QS-{total_rows:03d}"
                 current_time = datetime.now().strftime("%Y-%m-%d %H:%M")
                 
-                # ترتيب البيانات لحفظها في السطر
                 row_data = [customer_id, name, phone, chest, waist, hips, shoulder, length, sleeve, notes, current_time]
                 customers_sheet.append_row(row_data)
                 
-                st.success(f"🎉 عظيم جداً! تم حفظ ملف الزبونة ({name}) بنجاح، والآن البيانات مسجلة أونلاين.")
+                st.success(f"🎉 عظيم جداً! تم حفظ ملف الزبونة ({name}) بنجاح، ريفرش للسيستم وهيظهر في البحث.")
 
 
-# 6️⃣ الصفحة الثالثة والأخيرة: البحث الاحترافي عن المقاسات (الميزة الجديدة)
+# 6️⃣ الصفحة الثالثة: تسجيل حجز فستان جديد (الرجوع والربط الذكي)
+elif choice == "👗 تسجيل حجز جديد":
+    st.title("👗 تسجيل حجز فستان جديد لزبونة مسجلة")
+    st.write("اختر الزبونة وادخل تفاصيل الفستان والمبالغ المالية:")
+    
+    if not df_cust.empty and 'Name' in df_cust.columns:
+        # تجهيز قائمة بأسماء العملاء عشان تختار منهم علطول بدل ما تكتب الاسم وتغلط فيه
+        customer_list = df_cust['Name'].tolist()
+        
+        with st.form("booking_form", clear_on_submit=True):
+            selected_customer = st.selectbox("👤 اختر اسم الزبونة المحجوز لها:", customer_list)
+            dress_code = st.text_input("👗 كود أو اسم الفستان المحجوز *")
+            
+            col1, col2 = st.columns(2)
+            with col1:
+                total_price = st.number_input("💰 إجمالي سعر الإيجار/البيع (ج.م)", min_value=0.0, step=50.0)
+            with col2:
+                paid = st.number_input("💵 المقدم المدفوع حالياً (ج.م)", min_value=0.0, step=50.0)
+                
+            status = st.selectbox("📌 حالة الحجز الحالية:", ["نشط (تجهيز)", "مستلم برة الأتيليه", "منتهي وتم الإرجاع"])
+            
+            submit_booking = st.form_submit_button("💾 تسجيل الحجز المالي والفستان")
+            
+            if submit_booking:
+                if not dress_code:
+                    st.error("❌ خطأ: يجب إدخال كود أو اسم الفستان لإتمام الحجز!")
+                else:
+                    # جلب رقم التليفون الخاص بالزبونة المختارة تلقائياً من الـ DataFrame
+                    cust_phone = df_cust[df_cust['Name'] == selected_customer]['Phone'].values[0]
+                    
+                    # حساب الباقي تلقائياً منعا للغلط المانيوال
+                    remaining = total_price - paid
+                    
+                    total_b_rows = len(bookings_sheet.get_all_values())
+                    booking_id = f"BK-{total_b_rows:03d}"
+                    current_time = datetime.now().strftime("%Y-%m-%d %H:%M")
+                    
+                    booking_data = [booking_id, selected_customer, str(cust_phone), dress_code, str(total_price), str(paid), str(remaining), status, current_time]
+                    bookings_sheet.append_row(booking_data)
+                    
+                    st.success(f"🎉 تم تسجيل حجز الفستان ({dress_code}) للزبونة ({selected_customer}) بنجاح! الباقي عليها: {remaining} ج.م")
+    else:
+        st.warning("⚠️ يجب تسجيل زبونة واحدة على الأقل في قائمة 'تسجيل زبونة جديدة' قبل القدرة على عمل حجز فستان.")
+
+
+# 7️⃣ الصفحة الرابعة والأخيرة: البحث الاحترافي عن المقاسات (بدون أي أيرور)
 elif choice == "🔍 البحث عن مقاسات زبونة":
     st.title("🔍 محرك البحث الذكي عن ملفات ومقاسات الزبائن")
     st.write("اكتب اسم العميل أو جزء منه، أو رقم التليفون، وهيطلعلك كارت المقاسات فوراً:")
@@ -144,18 +201,15 @@ elif choice == "🔍 البحث عن مقاسات زبونة":
     search_query = st.text_input("👉 ادخل اسم الزبونة أو رقم التليفون المُراد البحث عنه:")
     
     if search_query:
-        all_customers = customers_sheet.get_all_records()
-        
-        if all_customers:
-            df = pd.DataFrame(all_customers)
-            
+        if not df_cust.empty:
             # تحويل البيانات لنصوص لمنع أي أخطاء أثناء البحث والتصفية
-            df['Name'] = df['Name'].astype(str)
-            df['Phone'] = df['Phone'].astype(str)
+            df_search = df_cust.copy()
+            df_search['Name'] = df_search['Name'].astype(str)
+            df_search['Phone'] = df_search['Phone'].astype(str)
             
             # البحث الجزئي الذكي (في خانة الاسم أو رقم الهاتف)
-            result = df[df['Name'].str.contains(search_query, case=False, na=False) | 
-                        df['Phone'].str.contains(search_query, na=False)]
+            result = df_search[df_search['Name'].str.contains(search_query, case=False, na=False) | 
+                               df_search['Phone'].str.contains(search_query, na=False)]
             
             if not result.empty:
                 st.success(f"🔍 تم العثور على ({len(result)}) زبونة تطابق بحثك:")
@@ -180,6 +234,6 @@ elif choice == "🔍 البحث عن مقاسات زبونة":
                         st.write(f"ℹ️ **ملاحظات العمل:** {row.get('Notes', 'لا يوجد ملاحظات مسجلة.')}")
                         st.caption(f"📅 تاريخ فتح الملف: {row.get('Date', 'غير محدد')}")
             else:
-                st.error("❌ لم يتم العثور على أي زبونة مسجلة بهذا الاسم أو الرقم، تأكد من الحروف.")
+                st.error("❌ لم يتم العثور على أي زبونة مسجلة بهذا الاسم أو الرقم، تأكد من طريقة الكتابة.")
         else:
             st.info("⚠️ جدول العملاء فارغ تماماً في شيت الإكسيل، قم بتسجيل عميل أولاً.")
