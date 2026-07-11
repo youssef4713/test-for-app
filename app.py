@@ -206,51 +206,48 @@ elif choice == "👗 تسجيل طلب تفصيل جديد":
         st.warning("⚠️ يجب تسجيل زبونة واحدة على الأقل في السيستم قبل القدرة على إنشاء طلب تفصيل مالي لها.")
 
 
-# 7️⃣ الصفحة الرابعة: البحث الاحترافي الشامل وضمان ظهور المقاسات دون اختفاء
+# 7️⃣ الصفحة الرابعة: البحث الاحترافي الشامل (النسخة النهائية لتصحيح قراءة القيم)
 elif choice == "🔍 البحث عن مقاسات زبونة":
     st.title("🔍 محرك البحث الذكي عن ملفات ومقاسات الزبائن")
-    st.write("اكتب اسم الزبونة أو رقم تليفونها، وهيظهرلك كارت المقاسات التفصيلي فوراً:")
-    
     search_query = st.text_input("👉 ادخل اسم الزبونة أو رقم التليفون:")
     
     if search_query:
         if not df_cust.empty:
+            # فلترة البيانات
             df_search = df_cust.copy()
-            df_search['Name'] = df_search['Name'].astype(str)
-            df_search['Phone'] = df_search['Phone'].astype(str)
+            # نضمن إن العواميد نصوص عشان البحث يشتغل
+            for col in df_search.columns:
+                df_search[col] = df_search[col].astype(str)
             
             result = df_search[df_search['Name'].str.contains(search_query, case=False, na=False) | 
                                df_search['Phone'].str.contains(search_query, na=False)]
             
             if not result.empty:
-                st.success(f"🔍 تم العثور على ({len(result)}) ملف يطابق بحثك:")
+                st.success(f"🔍 تم العثور على ({len(result)}) ملف:")
                 
                 for index, row in result.iterrows():
-                    with st.expander(f"👤 {row.get('Name', 'بدون اسم')} —— 📱 {row.get('Phone', 'بدون رقم')}"):
+                    # هنا بنعرض القيمة الصريحة (row[col]) بدل استخدام get
+                    with st.expander(f"👤 {row['Name']} —— 📱 {row['Phone']}"):
                         st.markdown("### 📐 المقاسات الـ 14 المسجلة:")
                         
-                        # استخدام 3 أعمدة مع تنسيق نصوص مرن يمنع اختفاء الأرقام الطويلة
                         c1, c2, c3 = st.columns(3)
                         with c1:
-                            st.markdown(f"**🔹 دوران الصدر (Chest):** \n `{row.get('Chest', '—')}`")
-                            st.markdown(f"**🔹 دوران الوسط (Waist):** \n `{row.get('Waist', '—')}`")
-                            st.markdown(f"**🔹 بنسة الصدر (Chest Dart):** \n `{row.get('Chest_Dart', '—')}`")
-                            st.markdown(f"**🔹 الطول الكلي (Length):** \n `{row.get('Length', '—')}`")
+                            st.write(f"**🔹 دوران الصدر (Chest):** {row['Chest']}")
+                            st.write(f"**🔹 دوران الوسط (Waist):** {row['Waist']}")
+                            st.write(f"**🔹 بنسة الصدر (Chest Dart):** {row['Chest_Dart']}")
+                            st.write(f"**🔹 الطول الكلي (Length):** {row['Length']}")
                         with c2:
-                            st.markdown(f"**🔹 عرض الكم (Sleeve Width):** \n `{row.get('Sleeve_Width', '—')}`")
-                            st.markdown(f"**🔹 طول من الرقبة للوسط:** \n `{row.get('Neck_to_Waist', '—')}`")
-                            st.markdown(f"**🔹 طول من الوسط لأسفل:** \n `{row.get('Waist_to_Botton', '—')}`")
-                            st.markdown(f"**🔹 دوران الأرداف (Hips):** \n `{row.get('Hips', '—')}`")
+                            st.write(f"**🔹 عرض الكم (Sleeve Width):** {row['Sleeve_Width']}")
+                            st.write(f"**🔹 طول من الرقبة للوسط:** {row['Neck_to_Waist']}")
+                            st.write(f"**🔹 طول من الوسط لأسفل:** {row['Waist_to_Botton']}")
+                            st.write(f"**🔹 دوران الأرداف (Hips):** {row['Hips']}")
                         with c3:
-                            st.markdown(f"**🔹 الحجر (Crotch):** \n `{row.get('Crotch', '—')}`")
-                            st.markdown(f"**🔹 الحجر الداخلي (Inseam):** \n `{row.get('Inseam', '—')}`")
-                            st.markdown(f"**🔹 عرض الفخذ (Thigh_Width):** \n `{row.get('Thigh_Width', '—')}`")
-                            st.markdown(f"**🔹 طول الفخذ للركبة:** \n `{row.get('Thigh_Length_K', '—')}`")
+                            st.write(f"**🔹 الحجر (Crotch):** {row['Crotch']}")
+                            st.write(f"**🔹 الحجر الداخلي (Inseam):** {row['Inseam']}")
+                            st.write(f"**🔹 عرض الفخذ (Thigh_Width):** {row['Thigh_Width']}")
+                            st.write(f"**🔹 طول الفخذ للركبة:** {row['Thigh_Length_K']}")
                         
                         st.write("---")
-                        st.write(f"ℹ️ **ملاحظات وتفاصيل الموديل:** {row.get('Notes', 'لا يوجد ملاحظات مسجلة.')}")
-                        st.caption(f"📅 تاريخ فتح ملف المقاسات: {row.get('Date', 'غير محدد')}")
+                        st.write(f"ℹ️ **ملاحظات:** {row['Notes']}")
             else:
-                st.error("❌ لم يتم العثور على أي زبونة مسجلة بهذا الاسم أو الرقم.")
-        else:
-            st.info("⚠️ جدول العملاء فارغ تماماً.")
+                st.error("❌ لم يتم العثور على نتائج.")
