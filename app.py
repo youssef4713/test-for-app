@@ -13,7 +13,7 @@ try:
     sh = gc.open("Atelier_Database")
     customers_sheet = sh.worksheet("customers")
     bookings_sheet = sh.worksheet("bookings")
-    completed_sheet = sh.worksheet("completed_bookings") # الشيت الجديد للأرشيف
+    completed_sheet = sh.worksheet("completed_bookings") 
 except Exception as e:
     st.error(f"خطأ في الاتصال بالسيرفر (تأكد من وجود شيت completed_bookings): {e}")
     st.stop()
@@ -26,7 +26,8 @@ def get_data(sheet):
     return pd.DataFrame()
 
 # القائمة الجانبية
-choice = st.sidebar.selectbox("🧭 القائمة الرئيسية:", ["📊 لوحة التحكم", "➕ تسجيل عميلة جديدة", "💰 الحسابات والطلبات", "🔍 بحث علي عميل و تعديل"])
+choice = st.sidebar.selectbox("🧭 القائمة الرئيسية:", 
+                              ["📊 لوحة التحكم", "➕ تسجيل عميلة جديدة", "💰 الحسابات والطلبات", "📦 الطلبات المكتملة", "🔍 بحث علي عميل و تعديل"])
 
 # --- 1. لوحة التحكم ---
 if choice == "📊 لوحة التحكم":
@@ -121,10 +122,9 @@ elif choice == "💰 الحسابات والطلبات":
                     if st.form_submit_button("💾 تحديث الطلب"):
                         remaining = new_total - new_paid
                         
-                        # منطق النقل للأرشيف
                         if new_status == "تم التسليم":
                             row_values = row.tolist()
-                            row_values[5] = new_paid # تحديث القيم الجديدة
+                            row_values[5] = new_paid 
                             row_values[4] = new_total
                             row_values[7] = new_status
                             completed_sheet.append_row(row_values)
@@ -141,7 +141,16 @@ elif choice == "💰 الحسابات والطلبات":
     else:
         st.info("لا توجد طلبات لعرضها.")
 
-# --- 4. بحث علي عميل و تعديل ---
+# --- 4. الطلبات المكتملة ---
+elif choice == "📦 الطلبات المكتملة":
+    st.title("📦 أرشيف الطلبات المكتملة")
+    df_comp = get_data(completed_sheet)
+    if not df_comp.empty:
+        st.dataframe(df_comp)
+    else:
+        st.info("لا توجد طلبات مكتملة مؤرشفة حالياً.")
+
+# --- 5. بحث علي عميل و تعديل ---
 elif choice == "🔍 بحث علي عميل و تعديل":
     st.title("🔍 بحث علي عميل و تعديل")
     
