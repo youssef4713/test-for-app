@@ -52,29 +52,22 @@ except Exception as e:
     st.stop()
 
 
-# دالة جلب البيانات الآمنة وتحويلها لـ DataFrame
+# دالة جلب البيانات الذكية (معدلة لمنع تكرار الأعمدة)
 def get_dataframe_safely(sheet, default_columns):
     try:
         raw_data = sheet.get_all_values()
         if len(raw_data) > 1:
-            df = pd.DataFrame(raw_data[1:], columns=raw_data[0])
-            df.columns = df.columns.str.strip()
+            # بنستخدم الصف الأول كعناوين فقط إذا كان مطابقاً للترتيب، وإلا بنجبره ياخد الـ default_columns
+            df = pd.DataFrame(raw_data[1:], columns=default_columns[:len(raw_data[0])])
+            
+            # منع تكرار الأعمدة (حل مشكلة الـ Duplicate columns)
+            df = df.loc[:, ~df.columns.duplicated()]
             return df
         else:
+            # لو الشيت فاضي، بيرجع جدول فاضي بنفس الأعمدة الأساسية
             return pd.DataFrame(columns=default_columns)
     except Exception:
         return pd.DataFrame(columns=default_columns)
-
-
-# جلب البيانات أوتوماتيكياً
-df_cust = get_dataframe_safely(customers_sheet, cust_headers)
-df_book = get_dataframe_safely(bookings_sheet, book_headers)
-
-
-# 3️⃣ تصميم القائمة الجانبية للتنقل (Sidebar)
-st.sidebar.title("👑 لوحة تفصيل الملكة")
-st.sidebar.write("نظام إدارة وتفصيل الفساتين الذكي")
-st.sidebar.write("---")
 
 choice = st.sidebar.selectbox(
     "🧭 اختر الصفحة أو العملية:", 
