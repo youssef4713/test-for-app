@@ -4,7 +4,48 @@ import pandas as pd
 from datetime import datetime
 
 # إعدادات الواجهة
-st.set_page_config(page_title="إدارة أتيليه الملكة", page_icon="👗", layout="wide")
+st.set_page_config(page_title="Lobna's | لوحة الإدارة", page_icon="👗", layout="wide")
+
+# --- حقن الـ CSS الاحترافي ---
+st.markdown("""
+    <style>
+    /* تغيير لون الخلفية */
+    .stApp { background-color: #f5f7f9; }
+    
+    /* تصميم الكروت (Cards) */
+    .css-card {
+        background-color: white;
+        padding: 20px;
+        border-radius: 15px;
+        border: 1px solid #e1e4e8;
+        box-shadow: 0 4px 6px rgba(0,0,0,0.05);
+        margin-bottom: 20px;
+    }
+    
+    /* تنسيق العناوين */
+    h1, h2, h3 { color: #2c3e50; font-family: 'Segoe UI', sans-serif; }
+    
+    /* تنسيق الأزرار */
+    div.stButton > button {
+        border-radius: 10px;
+        background-color: #4a90e2;
+        color: white;
+        border: none;
+        transition: 0.3s;
+    }
+    div.stButton > button:hover { background-color: #357abd; }
+    
+    /* تنسيق القائمة الجانبية */
+    section[data-testid="stSidebar"] {
+        background-color: #2c3e50;
+        color: white;
+    }
+    section[data-testid="stSidebar"] span { color: white; }
+    
+    /* تنسيق جدول البيانات */
+    .stDataFrame { border-radius: 10px; }
+    </style>
+""", unsafe_allow_html=True)
 
 # الاتصال بجوجل شيتس
 try:
@@ -26,12 +67,15 @@ def get_data(sheet):
     return pd.DataFrame()
 
 # القائمة الجانبية
-choice = st.sidebar.selectbox("🧭 القائمة الرئيسية:", 
-                              ["📊 لوحة التحكم", "➕ تسجيل عميلة جديدة", "💰 الحسابات والطلبات", "📦 الطلبات المكتملة", "🔍 بحث علي عميل و تعديل"])
+with st.sidebar:
+    st.title("👗 Lobna's")
+    st.write("---")
+    choice = st.radio("🧭 القائمة الرئيسية:", 
+                      ["📊 لوحة التحكم", "➕ تسجيل عميلة جديدة", "💰 الحسابات والطلبات", "📦 الطلبات المكتملة", "🔍 بحث علي عميل و تعديل"])
 
 # --- 1. لوحة التحكم ---
 if choice == "📊 لوحة التحكم":
-    st.title("📊 لوحة تحكم الأتيليه")
+    st.title("📊 لوحة تحكم Lobna's")
     df_book = get_data(bookings_sheet)
     
     if not df_book.empty and 'Date' in df_book.columns:
@@ -102,7 +146,6 @@ elif choice == "➕ تسجيل عميلة جديدة":
 elif choice == "💰 الحسابات والطلبات":
     st.title("💰 الحسابات والطلبات")
     
-    # إضافة طلب جديد
     with st.expander("➕ إضافة طلب جديد"):
         with st.form("add_new_booking"):
             df_cust = get_data(customers_sheet)
@@ -114,20 +157,18 @@ elif choice == "💰 الحسابات والطلبات":
             
             if st.form_submit_button("✅ إضافة الطلب"):
                 remaining = total_price - paid_amount
-                # الترتيب: Name, Date, Status, Details, Total, Paid, Remaining, Status (مكرر للحالة)
                 bookings_sheet.append_row([new_name, datetime.now().strftime("%Y-%m-%d"), "تحت التنفيذ", details, total_price, paid_amount, remaining, "تحت التنفيذ"])
                 st.success("تم إضافة الطلب بنجاح!")
                 st.rerun()
 
     st.write("---")
-    # عرض وتعديل الطلبات
     df_book = get_data(bookings_sheet)
     if not df_book.empty:
         for idx, row in df_book.iterrows():
             row_idx = idx + 2
             paid_val = pd.to_numeric(row.get('Paid', 0), errors='coerce') or 0
             total_val = pd.to_numeric(row.get('Total_Price', 0), errors='coerce') or 0
-            details_val = row.get('Dress_Details', '') # جلب التفاصيل الحالية
+            details_val = row.get('Dress_Details', '')
             name_val = row.get('Name', 'بدون اسم')
             status_val = row.get('Status', 'تحت التنفيذ')
             
@@ -143,7 +184,7 @@ elif choice == "💰 الحسابات والطلبات":
                         remaining = new_total - new_paid
                         if new_status == "تم التسليم":
                             row_values = row.tolist()
-                            row_values[3] = new_details # تحديث التفاصيل في الأرشيف
+                            row_values[3] = new_details
                             row_values[4] = new_total
                             row_values[5] = new_paid
                             row_values[7] = new_status
