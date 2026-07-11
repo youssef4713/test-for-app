@@ -15,7 +15,7 @@ try:
     bookings_sheet = sh.worksheet("bookings")
     completed_sheet = sh.worksheet("completed_bookings") 
 except Exception as e:
-    st.error(f"خطأ في الاتصال بالسيرفر (تأكد من وجود شيت completed_bookings): {e}")
+    st.error(f"خطأ في الاتصال بالسيرفر: {e}")
     st.stop()
 
 def get_data(sheet):
@@ -101,12 +101,29 @@ elif choice == "➕ تسجيل عميلة جديدة":
 # --- 3. الحسابات والطلبات ---
 elif choice == "💰 الحسابات والطلبات":
     st.title("💰 الحسابات والطلبات")
-    df_book = get_data(bookings_sheet)
     
+    # إضافة طلب جديد
+    with st.expander("➕ إضافة طلب جديد"):
+        with st.form("add_new_booking"):
+            df_cust = get_data(customers_sheet)
+            cust_names = df_cust['Name'].tolist() if not df_cust.empty else []
+            new_name = st.selectbox("اختر اسم العميل:", cust_names)
+            total_price = st.number_input("السعر الكلي:", min_value=0)
+            paid_amount = st.number_input("المبلغ المدفوع:", min_value=0)
+            
+            if st.form_submit_button("✅ إضافة الطلب"):
+                remaining = total_price - paid_amount
+                # الترتيب حسب الأعمدة (الاسم، التاريخ، الحالة، ...، السعر، المدفوع، المتبقي)
+                bookings_sheet.append_row([new_name, datetime.now().strftime("%Y-%m-%d"), "تحت التنفيذ", "", total_price, paid_amount, remaining, "تحت التنفيذ"])
+                st.success("تم إضافة الطلب بنجاح!")
+                st.rerun()
+
+    st.write("---")
+    # عرض وتعديل الطلبات
+    df_book = get_data(bookings_sheet)
     if not df_book.empty:
         for idx, row in df_book.iterrows():
             row_idx = idx + 2
-            
             paid_val = pd.to_numeric(row.get('Paid', 0), errors='coerce') or 0
             total_val = pd.to_numeric(row.get('Total_Price', 0), errors='coerce') or 0
             name_val = row.get('Name', 'بدون اسم')
@@ -121,7 +138,6 @@ elif choice == "💰 الحسابات والطلبات":
                     
                     if st.form_submit_button("💾 تحديث الطلب"):
                         remaining = new_total - new_paid
-                        
                         if new_status == "تم التسليم":
                             row_values = row.tolist()
                             row_values[5] = new_paid 
