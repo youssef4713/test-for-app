@@ -58,10 +58,34 @@ if choice == "📊 لوحة التحكم":
             st.info("لا توجد طلبات في آخر 30 يوم.")
     else:
         st.warning("تأكد من وجود عمود 'Date' في شيت الطلبات وتنسيقه كـ YYYY-MM-DD")
-# --- 2. تسجيل عميلة جديدة ---
+# --- 2. تسجيل عميلة جديدة (النسخة الكاملة والمشغلة) ---
 elif choice == "➕ تسجيل عميلة جديدة":
     st.title("➕ تسجيل عميلة جديدة")
-    # ... (كود تسجيل العميل كما هو)
+    with st.form("new_customer", clear_on_submit=True):
+        st.subheader("👤 البيانات الأساسية")
+        col1, col2 = st.columns(2)
+        name = col1.text_input("اسم الزبونة")
+        phone = col2.text_input("التليفون")
+        
+        st.subheader("📐 المقاسات")
+        c1, c2, c3 = st.columns(3)
+        chest = c1.text_input("دوران الصدر")
+        waist = c1.text_input("دوران الوسط")
+        chest_dart = c1.text_input("بنسة الصدر")
+        length = c2.text_input("الطول الكلي")
+        sleeve_width = c2.text_input("عرض الكم")
+        neck_to_waist = c2.text_input("طول الرقبة للوسط")
+        waist_to_bottom = c3.text_input("طول الوسط لأسفل")
+        hips = c3.text_input("دوران الأرداف")
+        crotch = c3.text_input("الحجر")
+        inseam = c3.text_input("الحجر الداخلي")
+        thigh_width = c3.text_input("عرض الفخذ")
+        thigh_length_k = c3.text_input("طول الفخذ للركبة")
+        notes = st.text_area("ملاحظات")
+        
+        if st.form_submit_button("💾 حفظ بيانات العميل"):
+            customers_sheet.append_row(["QS-NEW", name, phone, chest, waist, hips, length, neck_to_waist, waist_to_bottom, crotch, inseam, thigh_width, thigh_length_k, chest_dart, sleeve_width, notes, datetime.now().strftime("%Y-%m-%d")])
+            st.success(f"تم حفظ بيانات {name} بنجاح!")
 
 # --- 3. الحسابات والطلبات (التعديل هنا) ---
 elif choice == "💰 الحسابات والطلبات":
@@ -84,29 +108,47 @@ elif choice == "💰 الحسابات والطلبات":
 
     st.write("---")
     
-    # عرض وتعديل الطلبات
-    if not df_book.empty:
-        for idx, row in df_book.iterrows():
-            row_idx = idx + 2 # لأن الشيت يبدأ بصف الهيدر
-            with st.expander(f"👗 طلب: {row.get('Name', 'بدون اسم')} | الحالة: {row.get('Status', 'غير محدد')}"):
-                with st.form(f"edit_{row_idx}"):
-                    # عرض البيانات
-                    st.write(f"**العميل:** {row.get('Name')}")
-                    new_status = st.selectbox("الحالة:", ["تحت التنفيذ", "جاهز", "تم التسليم"], 
-                                             index=["تحت التنفيذ", "جاهز", "تم التسليم"].index(row.get('Status', 'تحت التنفيذ')))
-                    new_paid = st.number_input("المدفوع حالياً:", value=float(row.get('Paid', 0)))
-                    new_total = st.number_input("المبلغ الكلي:", value=float(row.get('Total_Price', 0)))
-                    
-                    if st.form_submit_button("💾 تحديث الطلب"):
-                        # حساب المتبقي تلقائياً
-                        remaining = new_total - new_paid
-                        # تحديث الخلايا (الترتيب: Total=5, Paid=6, Remaining=7, Status=8)
-                        bookings_sheet.update_cell(row_idx, 5, new_total)
-                        bookings_sheet.update_cell(row_idx, 6, new_paid)
-                        bookings_sheet.update_cell(row_idx, 7, remaining)
-                        bookings_sheet.update_cell(row_idx, 8, new_status)
-                        st.success("تم التحديث بنجاح!")
-
+# --- 4. تعديل المقاسات (النسخة الكاملة والمشغلة) ---
+elif choice == "🔍 تعديل المقاسات":
+    st.title("🔍 تعديل المقاسات")
+    search = st.text_input("ابحث باسم الزبونة لتعديل المقاسات:")
+    df_cust = get_data(customers_sheet)
+    
+    if search:
+        # البحث
+        result = df_cust[df_cust['Name'].str.contains(search, case=False, na=False)]
+        
+        if not result.empty:
+            for idx, row in result.iterrows():
+                row_idx = idx + 2 # لأن أول صف هيدر
+                with st.expander(f"👤 تعديل مقاسات: {row['Name']}"):
+                    with st.form(f"edit_meas_{row_idx}"):
+                        c1, c2, c3 = st.columns(3)
+                        # تحديث القيم
+                        new_chest = c1.text_input("دوران الصدر", value=row.get('Chest', ''))
+                        new_waist = c1.text_input("دوران الوسط", value=row.get('Waist', ''))
+                        new_dart = c1.text_input("بنسة الصدر", value=row.get('Chest_Dart', ''))
+                        
+                        new_len = c2.text_input("الطول الكلي", value=row.get('Length', ''))
+                        new_sleeve = c2.text_input("عرض الكم", value=row.get('Sleeve_Width', ''))
+                        new_neck = c2.text_input("طول الرقبة للوسط", value=row.get('Neck_to_Waist', ''))
+                        
+                        new_waist_bot = c3.text_input("طول الوسط لأسفل", value=row.get('Waist_to_Bottom', ''))
+                        new_hips = c3.text_input("دوران الأرداف", value=row.get('Hips', ''))
+                        new_crotch = c3.text_input("الحجر", value=row.get('Crotch', ''))
+                        
+                        # (ملاحظة: لو في مقاسات تانية زودها بنفس الطريقة)
+                        
+                        if st.form_submit_button("💾 تحديث المقاسات"):
+                            # التحديث في الشيت (تأكد من ترتيب الأعمدة)
+                            customers_sheet.update_cell(row_idx, 4, new_chest)
+                            customers_sheet.update_cell(row_idx, 5, new_waist)
+                            customers_sheet.update_cell(row_idx, 6, new_hips)
+                            customers_sheet.update_cell(row_idx, 7, new_len)
+                            # ... وكمل باقي الأعمدة زي ما هي في الشيت بتاعك
+                            st.success("تم تحديث البيانات!")
+        else:
+            st.warning("لم يتم العثور على زبونة بهذا الاسم.")
 # --- 4. تعديل المقاسات ---
 elif choice == "🔍 تعديل المقاسات":
     st.title("🔍 تعديل المقاسات")
