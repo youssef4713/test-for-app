@@ -4,7 +4,7 @@ import pandas as pd
 from datetime import datetime
 
 # إعدادات الواجهة
-st.set_page_config(page_title="إدارة أتيليه الملكة", page_icon="👗", layout="wide")
+st.set_page_config(page_title="Lobna's System", page_icon="👗", layout="wide")
 
 # الاتصال بجوجل شيتس
 try:
