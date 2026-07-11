@@ -5,7 +5,7 @@ from datetime import datetime
 
 # 1️⃣ إعدادات واجهة الصفحة بالكامل لشكل احترافي باللغة العربية
 st.set_page_config(
-    page_title="lobna's System",
+    page_title="Lobna's System",
     page_icon="👗",
     layout="wide",
     initial_sidebar_state="expanded"
@@ -27,11 +27,11 @@ try:
     gc = gspread.service_account_from_dict(creds)
     sh = gc.open("Atelier_Database")
     
-    # الأعمدة الكاملة للمقاسات بعد إضافة بنسة الصدر وعرض الكم
+    # الترتيب المتطابق 100% مع صورتك الحالية للشيتس
     cust_headers = [
-        "Customer_ID", "Name", "Phone", "Chest", "Waist", "Hips", "Shoulder", 
-        "Total_Length", "Sleeve", "Neck_to_Waist", "Waist_to_Bottom", "Crotch", 
-        "Inseam", "Thigh_Length_Knee", "Thigh_Width", "Chest_Dart", "Sleeve_Width", "Notes", "Date"
+        "Customer_ID", "Name", "Phone", "Chest", "Waist", "Hips", "Length", 
+        "Neck_to_Waist", "Waist_to_Botton", "Crotch", "Inseam", "Thigh_Width", 
+        "Thigh_Length_K", "Chest_Dart", "Sleeve_Width", "Notes", "Date"
     ]
     book_headers = ["Booking_ID", "Customer_Name", "Phone", "Dress_Code", "Total_Price", "Paid", "Remaining", "Status", "Date"]
     
@@ -129,27 +129,25 @@ elif choice == "➕ تسجيل زبونة ومقاسات جديدة":
             st.markdown("##### 👤 البيانات الأساسية")
             name = st.text_input("✍️ اسم الزبونة بالكامل *")
             phone = st.text_input("📱 رقم التليفون (واتساب) *")
-            st.markdown("##### 📐 مقاسات وِجسد علوي")
-            chest = st.text_input("دوران الصدر")
-            waist = st.text_input("دوران الوسط")
-            chest_dart = st.text_input("بنسة الصدر")
+            st.markdown("##### 📐 مقاسات وجسد علوي")
+            chest = st.text_input("دوران الصدر (Chest)")
+            waist = st.text_input("دوران الوسط (Waist)")
+            chest_dart = st.text_input("بنسة الصدر (Chest Dart)")
             
         with col2:
             st.markdown("##### 📐 مقاسات الأطوال والأكمام")
-            shoulder = st.text_input("عرض الكتف")
-            length = st.text_input("الطول الكلي للفستان")
-            sleeve = st.text_input("طول الكم")
-            sleeve_width = st.text_input("عرض الكم")
+            length = st.text_input("الطول الكلي للفستان (Length)")
+            sleeve_width = st.text_input("عرض الكم (Sleeve Width)")
             neck_to_waist = st.text_input("طول من الرقبة للوسط")
             waist_to_bottom = st.text_input("طول من الوسط لأسفل")
             
         with col3:
             st.markdown("##### 📐 مقاسات الجزء السفلي والبنطلون")
-            hips = st.text_input("دوران الأرداف/الهنش")
+            hips = st.text_input("دوران الأرداف/الهنش (Hips)")
             crotch = st.text_input("الحجر")
             inseam = st.text_input("الحجر الداخلي")
-            thigh_length_knee = st.text_input("طول الفخذ لحد الركبة")
             thigh_width = st.text_input("عرض الفخذ")
+            thigh_length_knee = st.text_input("طول الفخذ لحد الركبة")
             
         st.write("---")
         notes = st.text_area("📝 ملاحظات إضافية (نوع القماش المطلوب، الموديل، تعديلات خاصة بالزبونة)")
@@ -164,14 +162,14 @@ elif choice == "➕ تسجيل زبونة ومقاسات جديدة":
                 customer_id = f"QS-{total_rows:03d}"
                 current_time = datetime.now().strftime("%Y-%m-%d %H:%M")
                 
-                # ترتيب البيانات بدقة شديدة حسب مصفوفة الشيتس المعدلة
+                # إرسال البيانات بنفس ترتيب الأعمدة الأفقية في صورتك بالظبط
                 row_data = [
-                    customer_id, name, phone, chest, waist, hips, shoulder, length, sleeve,
-                    neck_to_waist, waist_to_bottom, crotch, inseam, thigh_length_knee, thigh_width,
-                    chest_dart, sleeve_width, notes, current_time
+                    customer_id, name, phone, chest, waist, hips, length,
+                    neck_to_waist, waist_to_bottom, crotch, inseam, thigh_width,
+                    thigh_length_knee, chest_dart, sleeve_width, notes, current_time
                 ]
                 customers_sheet.append_row(row_data)
-                st.success(f"🎉 ممتاز! تم حفظ كارت مقاسات الزبونة ({name}) بنجاح في قاعدة البيانات.")
+                st.success(f"🎉 ممتاز! تم حفظ ملف الزبونة ({name}) ونزلت كل الخانات في مكانها الصح.")
 
 
 # 6️⃣ الصفحة الثالثة: تسجيل طلب تفصيل مالي جديد
@@ -210,12 +208,12 @@ elif choice == "👗 تسجيل طلب تفصيل جديد":
                     booking_data = [booking_id, selected_customer, str(cust_phone), dress_code, str(total_price), str(paid), str(remaining), status, current_time]
                     bookings_sheet.append_row(booking_data)
                     
-                    st.success(f"🎉 تم تسجيل طلب التفصيل لـ ({selected_customer}) بنجاح! المبلغ الكلي: {total_price} ج.م | الباقي عليها: {remaining} ج.م")
+                    st.success(f"🎉 تم تسجيل طلب التفصيل لـ ({selected_customer}) بنجاح! الباقي عليها: {remaining} ج.م")
     else:
         st.warning("⚠️ يجب تسجيل زبونة واحدة على الأقل في السيستم قبل القدرة على إنشاء طلب تفصيل مالي لها.")
 
 
-# 7️⃣ الصفحة الرابعة: البحث الاحترافي الشامل وعرض الـ 14 مقاساً
+# 7️⃣ الصفحة الرابعة: البحث الاحترافي الشامل
 elif choice == "🔍 البحث عن مقاسات زبونة":
     st.title("🔍 محرك البحث الذكي عن ملفات ومقاسات الزبائن")
     st.write("اكتب اسم الزبونة أو رقم تليفونها، وهيظهرلك كارت المقاسات التفصيلي فوراً:")
@@ -243,19 +241,17 @@ elif choice == "🔍 البحث عن مقاسات زبونة":
                             st.write(f"**الصدر:** {row.get('Chest', '—')}")
                             st.write(f"**الوسط:** {row.get('Waist', '—')}")
                             st.write(f"**بنسة الصدر:** {row.get('Chest_Dart', '—')}")
-                            st.write(f"**الكتف:** {row.get('Shoulder', '—')}")
                         with c2:
-                            st.write(f"**الطول الكلي:** {row.get('Total_Length', '—')}")
-                            st.write(f"**الكم:** {row.get('Sleeve', '—')}")
+                            st.write(f"**الطول الكلي:** {row.get('Length', '—')}")
                             st.write(f"**عرض الكم:** {row.get('Sleeve_Width', '—')}")
                             st.write(f"**طول من الرقبة للوسط:** {row.get('Neck_to_Waist', '—')}")
-                            st.write(f"**طول من الوسط لأسفل:** {row.get('Waist_to_Bottom', '—')}")
+                            st.write(f"**طول من الوسط لأسفل:** {row.get('Waist_to_Botton', '—')}")
                         with c3:
                             st.write(f"**الأرداف:** {row.get('Hips', '—')}")
                             st.write(f"**الحجر:** {row.get('Crotch', '—')}")
                             st.write(f"**الحجر الداخلي:** {row.get('Inseam', '—')}")
-                            st.write(f"**طول الفخذ للركبة:** {row.get('Thigh_Length_Knee', '—')}")
                             st.write(f"**عرض الفخذ:** {row.get('Thigh_Width', '—')}")
+                            st.write(f"**طول الفخذ للركبة:** {row.get('Thigh_Length_K', '—')}")
                         
                         st.write("---")
                         st.write(f"ℹ️ **ملاحظات وتفاصيل الموديل:** {row.get('Notes', 'لا يوجد ملاحظات مسجلة.')}")
