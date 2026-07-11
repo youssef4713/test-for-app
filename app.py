@@ -4,7 +4,7 @@ import pandas as pd
 from datetime import datetime
 
 # إعدادات الواجهة
-st.set_page_config(page_title="test", page_icon="👗", layout="wide")
+st.set_page_config(page_title="إدارة أتيليه الملكة", page_icon="👗", layout="wide")
 
 # الاتصال بجوجل شيتس
 try:
@@ -13,8 +13,9 @@ try:
     sh = gc.open("Atelier_Database")
     customers_sheet = sh.worksheet("customers")
     bookings_sheet = sh.worksheet("bookings")
+    completed_sheet = sh.worksheet("completed_bookings") # الشيت الجديد للأرشيف
 except Exception as e:
-    st.error(f"خطأ في الاتصال بالسيرفر: {e}")
+    st.error(f"خطأ في الاتصال بالسيرفر (تأكد من وجود شيت completed_bookings): {e}")
     st.stop()
 
 def get_data(sheet):
@@ -33,24 +34,20 @@ if choice == "📊 لوحة التحكم":
     df_book = get_data(bookings_sheet)
     
     if not df_book.empty and 'Date' in df_book.columns:
-        # تحضير البيانات للحسابات
         df_book['Date'] = pd.to_datetime(df_book['Date'], errors='coerce')
         df_book['Paid'] = pd.to_numeric(df_book['Paid'], errors='coerce').fillna(0)
         df_book['Remaining'] = pd.to_numeric(df_book['Remaining'], errors='coerce').fillna(0)
         
-        # 1. حسابات الإجمالي الكلي
         total_paid = df_book['Paid'].sum()
         total_remaining = df_book['Remaining'].sum()
         total_count = len(df_book)
         
-        # 2. حسابات آخر 30 يوم
         thirty_days_ago = datetime.now() - pd.Timedelta(days=30)
         df_filtered = df_book[df_book['Date'] >= thirty_days_ago]
         
         recent_paid = df_filtered['Paid'].sum()
         recent_count = len(df_filtered)
         
-        # العرض
         st.subheader("📈 الإجمالي الكلي (منذ البداية)")
         c1, c2, c3 = st.columns(3)
         c1.metric("إجمالي التحصيل الكلي", f"{total_paid:,.0f} ج.م")
@@ -58,7 +55,6 @@ if choice == "📊 لوحة التحكم":
         c3.metric("عدد الطلبات الكلي", total_count)
         
         st.write("---")
-        
         st.subheader("🗓️ أداء آخر 30 يوم")
         c4, c5 = st.columns(2)
         c4.metric("تحصيل آخر 30 يوم", f"{recent_paid:,.0f} ج.م")
@@ -124,11 +120,24 @@ elif choice == "💰 الحسابات والطلبات":
                     
                     if st.form_submit_button("💾 تحديث الطلب"):
                         remaining = new_total - new_paid
-                        bookings_sheet.update_cell(row_idx, 5, new_total)
-                        bookings_sheet.update_cell(row_idx, 6, new_paid)
-                        bookings_sheet.update_cell(row_idx, 7, remaining)
-                        bookings_sheet.update_cell(row_idx, 8, new_status)
-                        st.success("تم التحديث!")
+                        
+                        # منطق النقل للأرشيف
+                        if new_status == "تم التسليم":
+                            row_values = row.tolist()
+                            row_values[5] = new_paid # تحديث القيم الجديدة
+                            row_values[4] = new_total
+                            row_values[7] = new_status
+                            completed_sheet.append_row(row_values)
+                            bookings_sheet.delete_rows(row_idx)
+                            st.success("تم نقل الطلب للأرشيف!")
+                            st.rerun()
+                        else:
+                            bookings_sheet.update_cell(row_idx, 5, new_total)
+                            bookings_sheet.update_cell(row_idx, 6, new_paid)
+                            bookings_sheet.update_cell(row_idx, 7, remaining)
+                            bookings_sheet.update_cell(row_idx, 8, new_status)
+                            st.success("تم التحديث!")
+                            st.rerun()
     else:
         st.info("لا توجد طلبات لعرضها.")
 
@@ -137,7 +146,6 @@ elif choice == "🔍 بحث علي عميل و تعديل":
     st.title("🔍 بحث علي عميل و تعديل")
     
     df_cust = get_data(customers_sheet)
-    
     search = st.text_input("🔎 ابحث باسم العميل أو اختر من القائمة أدناه:")
     
     if not df_cust.empty:
