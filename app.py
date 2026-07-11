@@ -108,13 +108,14 @@ elif choice == "💰 الحسابات والطلبات":
             df_cust = get_data(customers_sheet)
             cust_names = df_cust['Name'].tolist() if not df_cust.empty else []
             new_name = st.selectbox("اختر اسم العميل:", cust_names)
+            details = st.text_area("تفاصيل الطلب:")
             total_price = st.number_input("السعر الكلي:", min_value=0)
             paid_amount = st.number_input("المبلغ المدفوع:", min_value=0)
             
             if st.form_submit_button("✅ إضافة الطلب"):
                 remaining = total_price - paid_amount
-                # الترتيب حسب الأعمدة (الاسم، التاريخ، الحالة، ...، السعر، المدفوع، المتبقي)
-                bookings_sheet.append_row([new_name, datetime.now().strftime("%Y-%m-%d"), "تحت التنفيذ", "", total_price, paid_amount, remaining, "تحت التنفيذ"])
+                # الترتيب: Name, Date, Status, Details, Total, Paid, Remaining, Status (مكرر للحالة)
+                bookings_sheet.append_row([new_name, datetime.now().strftime("%Y-%m-%d"), "تحت التنفيذ", details, total_price, paid_amount, remaining, "تحت التنفيذ"])
                 st.success("تم إضافة الطلب بنجاح!")
                 st.rerun()
 
@@ -126,11 +127,13 @@ elif choice == "💰 الحسابات والطلبات":
             row_idx = idx + 2
             paid_val = pd.to_numeric(row.get('Paid', 0), errors='coerce') or 0
             total_val = pd.to_numeric(row.get('Total_Price', 0), errors='coerce') or 0
+            details_val = row.get('Dress_Details', '') # جلب التفاصيل الحالية
             name_val = row.get('Name', 'بدون اسم')
             status_val = row.get('Status', 'تحت التنفيذ')
             
             with st.expander(f"👗 طلب: {name_val} | الحالة: {status_val}"):
                 with st.form(f"edit_{row_idx}"):
+                    new_details = st.text_area("تفاصيل الطلب:", value=details_val)
                     new_status = st.selectbox("الحالة:", ["تحت التنفيذ", "جاهز", "تم التسليم"], 
                                              index=["تحت التنفيذ", "جاهز", "تم التسليم"].index(status_val) if status_val in ["تحت التنفيذ", "جاهز", "تم التسليم"] else 0)
                     new_paid = st.number_input("المدفوع حالياً:", value=float(paid_val))
@@ -140,14 +143,16 @@ elif choice == "💰 الحسابات والطلبات":
                         remaining = new_total - new_paid
                         if new_status == "تم التسليم":
                             row_values = row.tolist()
-                            row_values[5] = new_paid 
+                            row_values[3] = new_details # تحديث التفاصيل في الأرشيف
                             row_values[4] = new_total
+                            row_values[5] = new_paid
                             row_values[7] = new_status
                             completed_sheet.append_row(row_values)
                             bookings_sheet.delete_rows(row_idx)
                             st.success("تم نقل الطلب للأرشيف!")
                             st.rerun()
                         else:
+                            bookings_sheet.update_cell(row_idx, 4, new_details)
                             bookings_sheet.update_cell(row_idx, 5, new_total)
                             bookings_sheet.update_cell(row_idx, 6, new_paid)
                             bookings_sheet.update_cell(row_idx, 7, remaining)
