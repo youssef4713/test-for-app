@@ -23,7 +23,7 @@ df_cust = pd.DataFrame(sheet_cust.get_all_records())
 df_dress = pd.DataFrame(sheet_dress.get_all_records())
 df_rent = pd.DataFrame(sheet_rent.get_all_records())
 
-st.title("👗 نظام إدارة أتيليه الفساتين الذكي")
+st.title("Nany's Atelier")
 
 # 3. بناء الـ rentals_enriched (الـ Join الذكي)
 if not df_rent.empty and not df_cust.empty and not df_dress.empty:
