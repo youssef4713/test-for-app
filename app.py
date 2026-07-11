@@ -37,20 +37,20 @@ if choice == "➕ تسجيل زبونة":
         with col1:
             name = st.text_input("اسم الزبونة")
             phone = st.text_input("التليفون")
-            chest = st.text_input("Chest")
-            waist = st.text_input("Waist")
-            chest_dart = st.text_input("Chest Dart")
+            chest = st.text_input("دوران الصدر (Chest)")
+            waist = st.text_input("دوران الوسط (Waist)")
+            chest_dart = st.text_input("بنسة الصدر (Chest Dart)")
         with col2:
-            length = st.text_input("Length")
-            sleeve_width = st.text_input("Sleeve Width")
-            neck_to_waist = st.text_input("Neck to Waist")
-            waist_to_bottom = st.text_input("Waist to Bottom")
+            length = st.text_input("الطول الكلي (Length)")
+            sleeve_width = st.text_input("عرض الكم (Sleeve Width)")
+            neck_to_waist = st.text_input("طول من الرقبة للوسط")
+            waist_to_bottom = st.text_input("طول من الوسط لأسفل")
         with col3:
-            hips = st.text_input("Hips")
-            crotch = st.text_input("Crotch")
-            inseam = st.text_input("Inseam")
-            thigh_width = st.text_input("Thigh Width")
-            thigh_length_k = st.text_input("Thigh Length K")
+            hips = st.text_input("دوران الأرداف (Hips)")
+            crotch = st.text_input("الحجر (Crotch)")
+            inseam = st.text_input("الحجر الداخلي (Inseam)")
+            thigh_width = st.text_input("عرض الفخذ (Thigh Width)")
+            thigh_length_k = st.text_input("طول الفخذ للركبة")
         
         notes = st.text_area("ملاحظات إضافية")
         
@@ -59,7 +59,7 @@ if choice == "➕ تسجيل زبونة":
             # ترتيب البيانات لازم يطابق أعمدة الشيت بالضبط
             new_row = ["QS-NEW", name, phone, chest, waist, hips, length, neck_to_waist, waist_to_bottom, crotch, inseam, thigh_width, thigh_length_k, chest_dart, sleeve_width, notes, datetime.now().strftime("%Y-%m-%d")]
             customers_sheet.append_row(new_row)
-            st.success("تم الحفظ بنجاح! البيانات الآن في الشيت.")
+            st.success("تم الحفظ بنجاح!")
 
 elif choice == "🔍 البحث":
     st.title("🔍 محرك البحث عن المقاسات")
@@ -76,20 +76,20 @@ elif choice == "🔍 البحث":
                     with st.expander(f"👤 {row.get('Name', 'بدون اسم')}"):
                         c1, c2, c3 = st.columns(3)
                         with c1:
-                            st.write(f"**Chest:** {row.get('Chest', '-')}")
-                            st.write(f"**Waist:** {row.get('Waist', '-')}")
-                            st.write(f"**Chest Dart:** {row.get('Chest_Dart', '-')}")
-                            st.write(f"**Length:** {row.get('Length', '-')}")
+                            st.write(f"**دوران الصدر:** {row.get('Chest', '-')}")
+                            st.write(f"**دوران الوسط:** {row.get('Waist', '-')}")
+                            st.write(f"**بنسة الصدر:** {row.get('Chest_Dart', '-')}")
+                            st.write(f"**الطول الكلي:** {row.get('Length', '-')}")
                         with c2:
-                            st.write(f"**Sleeve Width:** {row.get('Sleeve_Width', '-')}")
-                            st.write(f"**Neck to Waist:** {row.get('Neck_to_Waist', '-')}")
-                            st.write(f"**Waist to Bottom:** {row.get('Waist_to_Botton', '-')}")
-                            st.write(f"**Hips:** {row.get('Hips', '-')}")
+                            st.write(f"**عرض الكم:** {row.get('Sleeve_Width', '-')}")
+                            st.write(f"**طول من الرقبة للوسط:** {row.get('Neck_to_Waist', '-')}")
+                            st.write(f"**طول من الوسط لأسفل:** {row.get('Waist_to_Botton', '-')}")
+                            st.write(f"**دوران الأرداف:** {row.get('Hips', '-')}")
                         with c3:
-                            st.write(f"**Crotch:** {row.get('Crotch', '-')}")
-                            st.write(f"**Inseam:** {row.get('Inseam', '-')}")
-                            st.write(f"**Thigh Width:** {row.get('Thigh_Width', '-')}")
-                            st.write(f"**Thigh Length K:** {row.get('Thigh_Length_K', '-')}")
+                            st.write(f"**الحجر:** {row.get('Crotch', '-')}")
+                            st.write(f"**الحجر الداخلي:** {row.get('Inseam', '-')}")
+                            st.write(f"**عرض الفخذ:** {row.get('Thigh_Width', '-')}")
+                            st.write(f"**طول الفخذ للركبة:** {row.get('Thigh_Length_K', '-')}")
                         
                         st.write("---")
                         st.write(f"**ملاحظات:** {row.get('Notes', '-')}")
