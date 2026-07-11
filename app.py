@@ -28,20 +28,36 @@ def get_data(sheet):
 # التنقل
 choice = st.sidebar.selectbox("🧭 القائمة الرئيسية:", ["📊 لوحة التحكم", "➕ تسجيل عميلة جديدة", "💰 الحسابات والطلبات", "🔍 تعديل المقاسات"])
 
-# --- 1. لوحة التحكم ---
+# --- 1. لوحة التحكم (محدثة لآخر 30 يوم) ---
 if choice == "📊 لوحة التحكم":
-    st.title("📊 ملخص الأتيليه المالي")
+    st.title("📊 ملخص الأتيليه المالي (آخر 30 يوم)")
     df_book = get_data(bookings_sheet)
-    if not df_book.empty:
-        # تحويل الأعمدة لأرقام للعمليات الحسابية
+    
+    if not df_book.empty and 'Date' in df_book.columns:
+        # تحويل التاريخ والبيانات المالية لأنواع صالحة للحساب
+        df_book['Date'] = pd.to_datetime(df_book['Date'], errors='coerce')
         df_book['Paid'] = pd.to_numeric(df_book['Paid'], errors='coerce').fillna(0)
         df_book['Remaining'] = pd.to_numeric(df_book['Remaining'], errors='coerce').fillna(0)
         
-        c1, c2, c3 = st.columns(3)
-        c1.metric("إجمالي التحصيل", f"{df_book['Paid'].sum():,.0f} ج.م")
-        c2.metric("إجمالي المتبقي", f"{df_book['Remaining'].sum():,.0f} ج.م")
-        c3.metric("عدد الطلبات", len(df_book))
-
+        # حساب تاريخ الـ 30 يوم اللي فاتوا
+        thirty_days_ago = datetime.now() - pd.Timedelta(days=30)
+        
+        # فلترة البيانات
+        df_filtered = df_book[df_book['Date'] >= thirty_days_ago]
+        
+        if not df_filtered.empty:
+            c1, c2, c3 = st.columns(3)
+            c1.metric("إجمالي التحصيل", f"{df_filtered['Paid'].sum():,.0f} ج.م")
+            c2.metric("إجمالي المتبقي", f"{df_filtered['Remaining'].sum():,.0f} ج.م")
+            c3.metric("عدد الطلبات", len(df_filtered))
+            
+            st.write("---")
+            st.subheader("📋 الطلبات خلال آخر 30 يوم:")
+            st.dataframe(df_filtered)
+        else:
+            st.info("لا توجد طلبات في آخر 30 يوم.")
+    else:
+        st.warning("تأكد من وجود عمود 'Date' في شيت الطلبات وتنسيقه كـ YYYY-MM-DD")
 # --- 2. تسجيل عميلة جديدة ---
 elif choice == "➕ تسجيل عميلة جديدة":
     st.title("➕ تسجيل عميلة جديدة")
