@@ -145,12 +145,6 @@ elif choice == "💰 الحسابات والطلبات":
     if df_book.empty:
         st.info("لا توجد طلبات جارية حالياً.")
     else:
-        # ترتيب الأعمدة وتسميتها
-        # تأكد إن السطور دي تحت بعضها ونفس مستوى المسافة (4 مسافات مثلاً)
-        st.write("--- ديبيج الأعمدة ---")
-        st.write(f"عدد الأعمدة الحقيقي: {len(df_book.columns)}")
-        st.write(f"أسماء الأعمدة الحقيقية: {df_book.columns.tolist()}")
-        st.stop()
         df_book.columns = ['Booking_ID', 'Name', 'Registration_Date', 'Delivery_Date', 'Status', 'Dress_Details', 'Total_Price', 'Paid', 'Remaining']
         
         # حلقة التعديل للطلبات
