@@ -99,85 +99,85 @@ elif choice == "➕ تسجيل عميلة جديدة":
             st.success(f"تم حفظ بيانات {name} بنجاح!")
 
 # --- 3. الحسابات والطلبات ---
-elif choice == "💰 الحسابات والطلبات":
-    st.title("💰 الحسابات والطلبات")
-    
-    with st.expander("➕ إضافة طلب جديد"):
-        with st.form("add_new_booking"):
-            df_cust = get_data(customers_sheet)
-            cust_names = df_cust['Name'].tolist() if not df_cust.empty else []
-            new_name = st.selectbox("اختر اسم العميل:", cust_names)
-            
-            # إضافة حقل اختيار التاريخ
-            delivery_date = st.date_input("📅 تاريخ التسليم المتوقع:")
-            
-            details = st.text_area("تفاصيل الطلب:")
-            total_price = st.number_input("السعر الكلي:", min_value=0)
-            paid_amount = st.number_input("المبلغ المدفوع:", min_value=0)
-            
-            if st.form_submit_button("✅ إضافة الطلب"):
-                remaining = total_price - paid_amount
-                # حفظ البيانات مع التاريخ الجديد
-                bookings_sheet.append_row([
-                    new_name, 
-                    datetime.now().strftime("%Y-%m-%d"), 
-                    delivery_date.strftime("%Y-%m-%d"), 
-                    "تحت التنفيذ", 
-                    details, 
-                    total_price, 
-                    paid_amount, 
-                    remaining
-                ])
-                st.success("تم إضافة الطلب بنجاح!")
-                st.rerun()
-
-    st.write("---")
+st.write("---")
     df_book = get_data(bookings_sheet)
     if not df_book.empty:
-        # ترتيب الطلبات
+        # ترتيب الطلبات من الأحدث للأقدم
         df_book = df_book.sort_index(ascending=False)
         
         for idx, row in df_book.iterrows():
-            row_idx = idx + 2
+            row_idx = idx + 2  # لأن الـ index بيبدأ من 0 والشيت بيبدأ من صف 2
             
+            # جلب البيانات الحالية من الصف
             name_val = row.get('Name', 'بدون اسم')
             reg_date = row.get('Registration_Date', '-')
-            deliv_date = row.get('Delivery_Date', '-') # جلب تاريخ التسليم
+            deliv_date = row.get('Delivery_Date', '-')
             status_val = row.get('Status', 'تحت التنفيذ')
+            details_val = row.get('Dress_Details', '')
+            total_val = pd.to_numeric(row.get('Total_Price', 0), errors='coerce') or 0
+            paid_val = pd.to_numeric(row.get('Paid', 0), errors='coerce') or 0
             
-            # عرض التاريخ في عنوان الـ Expander للسهولة
-with st.expander("➕ إضافة طلب جديد"):
-        with st.form("add_new_booking"):
-            df_cust = get_data(customers_sheet)
-            cust_names = df_cust['Name'].tolist() if not df_cust.empty else []
-            
-            # التعديل هنا: إضافة index=None عشان ميبقاش فيه اختيار تلقائي
-            new_name = st.selectbox("اختر اسم العميل:", cust_names, index=None, placeholder="اختر العميل من القائمة...")
-            
-            delivery_date = st.date_input("📅 تاريخ التسليم المتوقع:")
-            details = st.text_area("تفاصيل الطلب:")
-            total_price = st.number_input("السعر الكلي:", min_value=0)
-            paid_amount = st.number_input("المبلغ المدفوع:", min_value=0)
-            
-            if st.form_submit_button("✅ إضافة الطلب"):
-                # التعديل هنا: التحقق من وجود اسم عميل
-                if new_name is None:
-                    st.error("⚠️ من فضلك اختر اسم العميل أولاً!")
-                else:
-                    remaining = total_price - paid_amount
-                    bookings_sheet.append_row([
-                        new_name, 
-                        datetime.now().strftime("%Y-%m-%d"), 
-                        delivery_date.strftime("%Y-%m-%d"), 
-                        "تحت التنفيذ", 
-                        details, 
-                        total_price, 
-                        paid_amount, 
-                        remaining
-                    ])
-                    st.success(f"تم إضافة الطلب للعميل {new_name} بنجاح!")
-                    st.rerun()
+            # عرض التاريخ والحالة في عنوان الـ Expander للتابلت
+            with st.expander(f"👗 {name_val} | ⏳ التسليم: {deliv_date} | الحالة: {status_val}"):
+                st.markdown(f"📅 **تاريخ الحجز:** {reg_date}  |  🚀 **تاريخ التسليم المتوقع:** `{deliv_date}`")
+                
+                with st.form(f"edit_{row_idx}"):
+                    new_details = st.text_area("تفاصيل الطلب:", value=details_val)
                     
+                    # معالجة التاريخ القديم بأمان عشان الفايرفوكس أو المتصفح ميعملش إيرور
+                    try:
+                        default_date = pd.to_datetime(deliv_date).date()
+                    except:
+                        default_date = datetime.now().date()
+                        
+                    new_deliv_date = st.date_input("تعديل تاريخ التسليم:", value=default_date)
+                    
+                    # اختيار الحالة الجديدة
+                    new_status = st.selectbox("الحالة:", ["تحت التنفيذ", "جاهز", "تم التسليم"], 
+                                             index=["تحت التنفيذ", "جاهز", "تم التسليم"].index(status_val) if status_val in ["تحت التنفيذ", "جاهز", "تم التسليم"] else 0)
+                    
+                    new_total = st.number_input("المبلغ الكلي:", value=float(total_val), min_value=0.0)
+                    new_paid = st.number_input("المدفوع حالياً:", value=float(paid_val), min_value=0.0)
+                    
+                    if st.form_submit_button("💾 تحديث الطلب"):
+                        remaining = new_total - new_paid
+                        
+                        # --- سيناريو 1: إذا اختار "تم التسليم" -> يتم النقل للأرشيف فوراً وحذفه ---
+                        if new_status == "تم التسليم":
+                            # تجهيز البيانات المرتبة لنقلها لشيت completed_bookings
+                            row_to_archive = [
+                                name_val,
+                                reg_date,
+                                new_deliv_date.strftime("%Y-%m-%d"),
+                                "تم التسليم",
+                                new_details,
+                                new_total,
+                                new_paid,
+                                remaining
+                            ]
+                            
+                            # إضافة الصف لشيت الأرشيف completed_bookings
+                            completed_sheet.append_row(row_to_archive)
+                            
+                            # مسح الصف من شيت الـ bookings الأساسي
+                            bookings_sheet.delete_rows(row_idx)
+                            
+                            st.success(f"🎉 مبروك! تم تسليم طلب العميل {name_val} بنجاح ونقله إلى شيت الطلبات المكتملة.")
+                            st.rerun()
+                        
+                        # --- سيناريو 2: تحديث البيانات العادية لو الحالة لسه مخلصتش ---
+                        else:
+                            # تحديث الخلايا بناءً على ترتيبها الصحيح في الشيت
+                            bookings_sheet.update_cell(row_idx, 3, new_deliv_date.strftime("%Y-%m-%d")) # Delivery_Date
+                            bookings_sheet.update_cell(row_idx, 4, new_status)                         # Status
+                            bookings_sheet.update_cell(row_idx, 5, new_details)                        # Dress_Details
+                            bookings_sheet.update_cell(row_idx, 6, new_total)                          # Total_Price
+                            bookings_sheet.update_cell(row_idx, 7, new_paid)                           # Paid
+                            bookings_sheet.update_cell(row_idx, 8, remaining)                          # Remaining
+                            
+                            st.success("تم تحديث بيانات الطلب بنجاح!")
+                            st.rerun()
+                            
 # --- 4. الطلبات المكتملة ---
 elif choice == "📦 الطلبات المكتملة":
     st.title("📦 أرشيف الطلبات المكتملة")
