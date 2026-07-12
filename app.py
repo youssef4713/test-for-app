@@ -247,8 +247,8 @@ elif choice == "🔍 بحث علي عميل و تعديل":
     st.title("🔍 بحث علي عميل و تعديل")
 
     def to_num(val):
-    try: return float(val)
-    except: return 0.0
+        try: return float(val)
+        except: return 0.0
     
     # جلب البيانات
     df_cust = get_data(customers_sheet)
