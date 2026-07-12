@@ -1,4 +1,5 @@
 import streamlit as st
+import streamlit as st
 import gspread
 import time
 import pandas as pd
@@ -10,6 +11,39 @@ def get_cached_sheet(sheet_name):
     # افترضنا إنك مسمي الـ client بتاعك 'client' في الكود، لو مسميه حاجة تانية غير الاسم هنا
     return client.open("اسم_ملف_جوجل_شيت_بتاعك").worksheet(sheet_name)
 
+
+import streamlit as st
+
+# دالة التحقق من الباسورد
+def check_password():
+    # حط هنا الباسورد اللي أنت عايزه
+    password = "4713" 
+    
+    # واجهة إدخال الباسورد
+    input_password = st.text_input("🔐 يرجى إدخال كلمة المرور لدخول النظام:", type="password")
+    
+    if input_password == password:
+        return True
+    elif input_password == "":
+        st.info("الرجاء إدخال كلمة المرور للدخول.")
+        st.stop() # بيوقف تحميل باقي التطبيق
+    else:
+        st.error("❌ كلمة المرور غير صحيحة!")
+        st.stop() # بيوقف تحميل باقي التطبيق
+
+# --- بداية السيستم ---
+if check_password(choice = st.sidebar.radio(
+    "🧭 القائمة الرئيسية:", 
+    ["📊 لوحة التحكم", "➕ تسجيل عميلة جديدة", "💰 الحسابات والطلبات", "📦 الطلبات المكتملة", "🔍 بحث علي عميل و تعديل", "👤 حساب العميل", "💰 مديونيات العملاء", "📅 التسليمات"],
+    key="main_menu"  # <--- ده اللي هيخلينا نتحكم في الاختيار
+):
+    # هنا هتحط كل الكود بتاعك اللي كان موجود أصلاً
+    # يعني كل الـ if/elif بتاعت الـ menu هتبقى جوه الـ if دي
+    
+    # مثال:
+    # st.title("أهلاً بك يا يوسف")
+    # choice = st.sidebar.selectbox(...)
+    # ... وباقي كودك ...
 
 # إعدادات الواجهة
 st.set_page_config(page_title="Lobna's System", page_icon="👗", layout="wide")
@@ -75,12 +109,6 @@ def get_data(sheet):
         return df
     return pd.DataFrame()
 
-# القائمة الجانبية
-choice = st.sidebar.radio(
-    "🧭 القائمة الرئيسية:", 
-    ["📊 لوحة التحكم", "➕ تسجيل عميلة جديدة", "💰 الحسابات والطلبات", "📦 الطلبات المكتملة", "🔍 بحث علي عميل و تعديل", "👤 حساب العميل", "💰 مديونيات العملاء", "📅 التسليمات"],
-    key="main_menu"  # <--- ده اللي هيخلينا نتحكم في الاختيار
-)
       
 # --- 1. لوحة التحكم (KPIs) ---
 if choice == "📊 لوحة التحكم":
