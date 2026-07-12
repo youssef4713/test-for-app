@@ -216,7 +216,7 @@ elif choice == "💰 الحسابات والطلبات":
                     # عرض المبلغ المدفوع الحالي
                     st.number_input("المبلغ المدفوع حالياً:", value=float(row['Paid']), disabled=True)
                     
-                    additional_payment = c1.number_input("إضافة مبلغ جديد:", min_value=0.0, value=0.0)
+                    additional_payment = c1.number_input("إضافة دفعة :", min_value=0.0, value=0.0)
                     
                     new_paid = float(row['Paid']) + additional_payment
                     new_remaining = new_total - new_paid
