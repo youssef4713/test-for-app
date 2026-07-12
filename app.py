@@ -16,37 +16,24 @@ st.set_page_config(page_title="Lobna's System", page_icon="👗", layout="wide")
 
 # 2. دالة كلمة السر
 def check_password():
-    password = "4713" 
+    # نتأكد إذا كان المستخدم دخل الباسورد صح قبل كدة ولا لأ
+    if "password_correct" not in st.session_state:
+        st.session_state["password_correct"] = False
+
+    # لو هو دخل الباسورد صح فعلاً، نرجع True ونكمل البرنامج
+    if st.session_state["password_correct"]:
+        return True
+
+    # لو لسه مدخلش، نظهر له خانة الباسورد
     input_password = st.text_input("🔐 يرجى إدخال كلمة المرور لدخول النظام:", type="password")
     
-    if input_password == password:
-        return True
-    elif input_password == "":
-        st.info("الرجاء إدخال كلمة المرور للدخول.")
-        st.stop()
-    else:
+    if input_password == "4713":
+        st.session_state["password_correct"] = True
+        st.rerun() # بنعمل ريفريش عشان يخفي الخانة ويظهر البرنامج
+    elif input_password != "":
         st.error("❌ كلمة المرور غير صحيحة!")
-        st.stop()
-
-# 3. شرط الدخول (كل الكود اللي جاي لازم يكون تحت الـ if دي)
-if check_password():
-    
-    # الـ sidebar والـ choice هيكونوا هنا جوه الـ if
-    choice = st.sidebar.radio(
-        "🧭 القائمة الرئيسية:", 
-        ["📊 لوحة التحكم", "➕ تسجيل عميلة جديدة", "💰 الحسابات والطلبات", "📦 الطلبات المكتملة", "🔍 بحث علي عميل و تعديل", "👤 حساب العميل", "💰 مديونيات العملاء", "📅 التسليمات"],
-        key="main_menu" 
-    )
-
-    # هنا هتبدأ الـ if/elif بتاعتك (البرنامج العادي)
-    if choice == "📊 لوحة التحكم":
-        st.write("أهلاً بك في لوحة التحكم")
-        # ... باقي الكود بتاعك ...
         
-    elif choice == "💰 الحسابات والطلبات":
-        # ... حط الكود اللي ظبطناه سوا ...
-        st.title("💰 الحسابات والطلبات")
-        # ... الخ
+    return False
 
 # الاتصال بجوجل شيتس
 @st.cache_resource
