@@ -268,7 +268,7 @@ elif choice == "🔍 بحث علي عميل و تعديل":
                         c1, c2, c3 = st.columns(3)
                         
                         # الحقول - ضفنا هنا خانة التليفون
-                        new_phone = c1.number_input("رقم التليفون", value=to_num(row.get('Phone', '')), format="%f", step=0.5, key=f"phone_{idx}")
+                        new_phone = c1.text_input("رقم التليفون", value=str(row.get('Phone', '')), key=f"phone_{idx}")
                         new_chest = c1.number_input("دوران الصدر", value=to_num(row.get('Chest', '')), format="%f", step=0.5, key=f"chest_{idx}")
                         new_waist = c1.number_input("دوران الوسط", value=to_num(row.get('Waist', '')), format="%f", step=0.5, key=f"waist_{idx}")
                         new_dart = c1.number_input("بنسة الصدر", value=to_num(row.get('Chest_Dart', '')), format="%f", step=0.5, key=f"dart_{idx}")
