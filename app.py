@@ -100,7 +100,7 @@ elif choice == "➕ تسجيل عميلة جديدة":
 
 # --- 3. الحسابات والطلبات ---
 st.write("---")
-    df_book = get_data(bookings_sheet)
+    df_book = get_data(bookings)
     if not df_book.empty:
         # ترتيب الطلبات من الأحدث للأقدم
         df_book = df_book.sort_index(ascending=False)
