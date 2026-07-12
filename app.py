@@ -280,7 +280,7 @@ elif choice == "🔍 بحث علي عميل و تعديل":
                         new_waist_bot = c3.text_input("طول الوسط لأسفل", value=str(row.get('Waist_to_Bottom', '')), key=f"wbot_{idx}")
                         new_hips = c3.text_input("دوران الأرداف", value=str(row.get('Hips', '')), key=f"hips_{idx}")
                         new_crotch = c3.text_input("الحجر", value=str(row.get('Crotch', '')), key=f"crotch_{idx}")
-                        new_thigh_knee = c3.text_input("طول الفخذ للركبة", value=str(row.get('Thigh_to_Knee', '')), key=f"thk_{idx}")
+                        new_thigh_knee = c3.text_input("طول الفخذ للركبة", value=str(row.get('thigh_length_k', '')), key=f"thk_{idx}")
                         
                         new_notes = st.text_area("ملاحظات", value=str(row.get('Notes', '')), key=f"notes_{idx}")
                         
