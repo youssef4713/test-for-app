@@ -418,42 +418,54 @@ elif choice == "👤 حساب العميل":
 elif choice == "💰 مديونيات العملاء":
     st.title("💰 مديونيات العملاء")
     
-    # جلب البيانات
-    df_bookings = get_data(bookings_sheet)
+    # 1. جلب البيانات
+    df = get_data(bookings_sheet)
     
-    # 1. تنظيف البيانات: تحويل الأعمدة لأرقام
-    df_bookings['Total_Price'] = pd.to_numeric(df_bookings['Total_Price'], errors='coerce').fillna(0)
-    df_bookings['Paid'] = pd.to_numeric(df_bookings['Paid'], errors='coerce').fillna(0)
-    df_bookings['Remaining'] = pd.to_numeric(df_bookings['Remaining'], errors='coerce').fillna(0)
+    # تحويل الأعمدة لأرقام للتعامل معها
+    df['Total_Amount'] = pd.to_numeric(df['Total_Amount'], errors='coerce').fillna(0)
+    df['Paid_Amount'] = pd.to_numeric(df['Paid_Amount'], errors='coerce').fillna(0)
+    # حساب المتبقي (لو العمود مش موجود في الشيت، بيحسبه أوتوماتيك)
+    df['Remaining'] = df['Total_Amount'] - df['Paid_Amount']
     
-    # 2. تجميع البيانات: نجمع كل المديونيات + إجمالي الحساب + المدفوع لنفس الاسم
-    debt_summary = df_bookings.groupby('Name')[['Total_Price', 'Paid', 'Remaining']].sum().reset_index()
+    # 2. فلترة الأوردرات اللي عليها مديونية فقط
+    debtors = df[df['Remaining'] > 0]
     
-    # 3. الفلترة: نشيل الناس اللي مديونيتهم 0
-    debt_summary = debt_summary[debt_summary['Remaining'] > 0]
-    
-    if not debt_summary.empty:
-        # إجمالي المديونيات في الأتيليه كله
-        total_debt = debt_summary['Remaining'].sum()
+    if not debtors.empty:
+        total_debt = debtors['Remaining'].sum()
         st.metric("💰 إجمالي المديونيات في الأتيليه", f"{total_debt:,.0f} ج.م")
         
-        st.subheader("تفاصيل المديونيات لكل عميل:")
-        
-        # عرض الجدول مع إظهار الإجمالي والمدفوع بجانب المديونية
-        st.dataframe(
-            debt_summary.sort_values(by='Remaining', ascending=False),
-            use_container_width=True,
-            hide_index=True,
-            column_config={
-                "Name": "اسم العميل",
-                "Total_Price": "إجمالي الحساب (ج.م)",
-                "Paid": "إجمالي المدفوع (ج.م)",
-                "Remaining": "إجمالي المديونية (ج.م)"
-            }
-        )
+        # 3. عرض كل أوردر مديون في Expandable Box (نفس فكرة صفحة البحث)
+        for idx, row in debtors.iterrows():
+            with st.expander(f"👤 {row['Name']} - متبقي: {row['Remaining']} ج.م"):
+                with st.form(f"debt_form_{idx}"):
+                    st.write(f"**نوع الطلب:** {row.get('Order_Type', 'غير محدد')}")
+                    
+                    # خانات التعديل
+                    new_total = st.number_input("إجمالي الحساب:", value=float(row['Total_Amount']), step=50.0, key=f"total_{idx}")
+                    new_paid = st.number_input("المبلغ المدفوع:", value=float(row['Paid_Amount']), step=50.0, key=f"paid_{idx}")
+                    
+                    if st.form_submit_button("💾 تحديث المديونية"):
+                        # كود التحديث في الشيت
+                        try:
+                            # البحث عن الصف في الشيت (بنفس طريقتك في صفحة البحث)
+                            cell = bookings_sheet.find(row['Name']) # تأكد من دقة البحث هنا
+                            actual_row_idx = cell.row
+                            
+                            # تحديث الأعمدة
+                            headers = bookings_sheet.row_values(1)
+                            # دالة مساعدة لتحديد مكان العمود
+                            def get_col_idx(name): return headers.index(name) + 1
+                            
+                            bookings_sheet.update_cell(actual_row_idx, get_col_idx('Total_Amount'), str(new_total))
+                            bookings_sheet.update_cell(actual_row_idx, get_col_idx('Paid_Amount'), str(new_paid))
+                            
+                            st.success("تم تحديث الحساب!")
+                            st.rerun()
+                        except Exception as e:
+                            st.error(f"خطأ في التحديث: {e}")
     else:
         st.success("مفيش أي مديونيات حالياً.")
-
+        
 #--------------تواريخ التسليم----------------
 
 elif choice == "📅 التسليمات":
