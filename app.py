@@ -99,7 +99,6 @@ elif choice == "➕ تسجيل عميلة جديدة":
             customers_sheet.append_row(["QS-NEW", name, phone, chest, waist, hips, length, neck_to_waist, waist_to_bottom, crotch, inseam, thigh_width, thigh_length_k, chest_dart, sleeve_width, notes, datetime.now().strftime("%Y-%m-%d")])
             st.success(f"تم حفظ بيانات {name} بنجاح!")
 
-# --- 3. الحسابات والطلبات ---
 elif choice == "💰 الحسابات والطلبات":
     st.title("💰 الحسابات والطلبات")
     
@@ -121,9 +120,9 @@ elif choice == "💰 الحسابات والطلبات":
                     booking_id = int(datetime.now().timestamp()) 
                     remaining = total_price - paid_amount
                     bookings_sheet.append_row([
-                        booking_id, new_name, datetime.now().strftime("%Y-%m-%d"), 
+                        str(booking_id), new_name, datetime.now().strftime("%Y-%m-%d"), 
                         delivery_date.strftime("%Y-%m-%d"), "تحت التنفيذ", details, 
-                        total_price, paid_amount, remaining
+                        float(total_price), float(paid_amount), float(remaining)
                     ])
                     st.success("تم إضافة الطلب!")
                     st.rerun()
@@ -131,20 +130,23 @@ elif choice == "💰 الحسابات والطلبات":
     st.write("---")
     
     df_book = get_data(bookings_sheet)
+    
+    # ضمان ثبات أسماء الأعمدة لتجنب الـ KeyError
     if not df_book.empty:
-        # ترتيب حسب أقرب ميعاد تسليم (تصاعدي)
+        df_book.columns = ['Booking_ID', 'Name', 'Registration_Date', 'Delivery_Date', 'Status', 'Dress_Details', 'Total_Price', 'Paid', 'Remaining']
+        
+        # ترتيب حسب أقرب ميعاد تسليم
         df_book['Delivery_Date'] = pd.to_datetime(df_book['Delivery_Date'], errors='coerce')
         df_book = df_book.sort_values(by='Delivery_Date', ascending=True)
         
         for idx, row in df_book.iterrows():
             b_id = str(row.get('Booking_ID', ''))
             name_val = row.get('Name', 'بدون اسم')
-            # تنسيق التاريخ للعرض
             deliv_date = row.get('Delivery_Date').strftime('%Y-%m-%d') if pd.notnull(row.get('Delivery_Date')) else '-'
             status_val = row.get('Status', 'تحت التنفيذ')
             
             with st.expander(f"👗 {name_val} | ⏳ تسليم: {deliv_date} | الحالة: {status_val}"):
-                # استخدام key فريد بيجمع الـ ID ورقم الصف عشان ميطلعش إيرور
+                # استخدام key فريد (ID + رقم الصف) لمنع الإيرور
                 with st.form(key=f"edit_{b_id}_{idx}"):
                     new_details = st.text_area("تفاصيل الطلب:", value=row.get('Dress_Details', ''))
                     new_deliv_date = st.date_input("تعديل التاريخ:", value=pd.to_datetime(deliv_date))
@@ -156,12 +158,17 @@ elif choice == "💰 الحسابات والطلبات":
                         row_idx = cell.row
                         
                         if new_status == "تم التسليم":
-                            # نقل للأرشيف
-                            completed_sheet.append_row(row.tolist())
+                            # تجهيز البيانات كقيم نصية/رقمية بسيطة لتجنب إيرور الـ JSON
+                            archive_row = [
+                                str(row['Booking_ID']), str(row['Name']), str(row['Registration_Date']),
+                                new_deliv_date.strftime("%Y-%m-%d"), "تم التسليم", str(new_details),
+                                float(row['Total_Price']), float(row['Paid']), float(row['Remaining'])
+                            ]
+                            completed_sheet.append_row(archive_row)
                             bookings_sheet.delete_rows(row_idx)
                             st.success("تم التسليم والترحيل للأرشيف!")
                         else:
-                            # تحديث البيانات (الترتيب: Name=2, Reg=3, Deliv=4, Status=5, Details=6, Total=7, Paid=8, Rem=9)
+                            # تحديث الخلايا العادية
                             bookings_sheet.update_cell(row_idx, 4, new_deliv_date.strftime("%Y-%m-%d"))
                             bookings_sheet.update_cell(row_idx, 5, new_status)
                             bookings_sheet.update_cell(row_idx, 6, new_details)
