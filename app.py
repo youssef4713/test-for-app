@@ -141,6 +141,11 @@ elif choice == "💰 الحسابات والطلبات":
         st.info("لا توجد طلبات جارية حالياً.")
     else:
         # ترتيب الأعمدة وتسميتها
+        
+        st.write("--- ديبيج الأعمدة ---")
+st.write(f"عدد الأعمدة الحقيقي اللي الـ DataFrame شايفاه: {len(df_book.columns)}")
+st.write(f"أسماء الأعمدة الحقيقية: {df_book.columns.tolist()}")
+st.stop() # السطر ده هيوقف البرنامج عشان تقدر تشوف النتيجة قبل ما يكرش
         df_book.columns = ['Booking_ID', 'Name', 'Registration_Date', 'Delivery_Date', 'Status', 'Dress_Details', 'Total_Price', 'Paid', 'Remaining']
         
         # حلقة التعديل للطلبات
