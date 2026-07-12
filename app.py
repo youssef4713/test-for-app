@@ -135,7 +135,6 @@ elif choice == "💰 الحسابات والطلبات":
     
     # 2. تعديل ومعالجة الطلبات (جت في الأول عشان هي الأهم)
     st.header("⚙️ تعديل ومعالجة الطلبات")
-    @st.cache_data(ttl=3600)
     df_book = get_data(bookings_sheet)
     
     if df_book.empty:
