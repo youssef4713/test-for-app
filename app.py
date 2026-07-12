@@ -18,7 +18,7 @@ except Exception as e:
     st.error(f"خطأ في الاتصال بالسيرفر: {e}")
     st.stop()
 
-@st.cache_data(ttl=3600)
+@st.cache_data(ttl=3600, hash_funcs={gspread.worksheet.Worksheet: lambda _: None})
 def get_data(sheet):
     raw_data = sheet.get_all_values()
     if len(raw_data) > 1:
