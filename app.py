@@ -30,82 +30,47 @@ choice = st.sidebar.selectbox("🧭 القائمة الرئيسية:",
                               ["📊 لوحة التحكم", "➕ تسجيل عميلة جديدة", "💰 الحسابات والطلبات", "📦 الطلبات المكتملة", "🔍 بحث علي عميل و تعديل"])
 
 # --- 1. لوحة التحكم (KPIs) ---
-if choice == "💰 الحسابات والطلبات":
-    st.title("💰 الحسابات والطلبات")
-
-    # 1. قسم إضافة طلب جديد
-    with st.expander("➕ إضافة طلب جديد"):
-        with st.form("add_new_booking", clear_on_submit=True):
-            df_cust = get_data(customers_sheet)
-            cust_names = df_cust['Name'].tolist() if not df_cust.empty else []
-            new_name = st.selectbox("اختر اسم العميل:", cust_names, index=None, placeholder="اختر العميل...")
-            
-            delivery_date = st.date_input("📅 تاريخ التسليم المتوقع:")
-            details = st.text_area("تفاصيل الطلب:")
-            total_price = st.number_input("السعر الكلي:", min_value=0)
-            paid_amount = st.number_input("المبلغ المدفوع:", min_value=0)
-            
-            if st.form_submit_button("✅ حفظ الطلب"):
-                if new_name is None:
-                    st.error("⚠️ يرجى اختيار العميل!")
-                else:
-                    booking_id = int(datetime.now().timestamp())
-                    remaining = total_price - paid_amount
-                    bookings_sheet.append_row([str(booking_id), new_name, datetime.now().strftime("%Y-%m-%d"), 
-                                               delivery_date.strftime("%Y-%m-%d"), "تحت التنفيذ", details, 
-                                               float(total_price), float(paid_amount), float(remaining)])
-                    st.success("تم إضافة الطلب!")
-                    st.rerun()
-
-    st.markdown("---")
+if choice == "📊 لوحة التحكم":
+    st.title("📊 لوحة التحكم - الأتيليه")
     
-    # 2. تعديل ومعالجة الطلبات (جت في الأول عشان هي الأهم)
-    st.header("⚙️ تعديل ومعالجة الطلبات")
-    df_book = get_data(bookings_sheet)
+    # دالة لجلب وتنظيف البيانات الخاصة بلوحة التحكم فقط
+    def get_clean_df(sheet):
+        df = get_data(sheet)
+        if df.empty:
+            return pd.DataFrame(columns=['Booking_ID', 'Name', 'Registration_Date', 'Delivery_Date', 'Status', 'Dress_Details', 'Total_Price', 'Paid', 'Remaining'])
+        
+        # التأكد من ترتيب الأعمدة
+        cols = ['Booking_ID', 'Name', 'Registration_Date', 'Delivery_Date', 'Status', 'Dress_Details', 'Total_Price', 'Paid', 'Remaining']
+        df.columns = cols
+        
+        # تحويل الأعمدة لأرقام لتجنب أي أخطاء حسابية
+        df['Paid'] = pd.to_numeric(df['Paid'], errors='coerce').fillna(0)
+        df['Remaining'] = pd.to_numeric(df['Remaining'], errors='coerce').fillna(0)
+        return df
+
+    # جلب البيانات من الشيتين
+    df_active = get_clean_df(bookings_sheet)
+    df_archive = get_clean_df(completed_sheet)
     
-    if df_book.empty:
-        st.info("لا توجد طلبات جارية حالياً.")
-    else:
-        # ترتيب الأعمدة وتسميتها
-        df_book.columns = ['Booking_ID', 'Name', 'Registration_Date', 'Delivery_Date', 'Status', 'Dress_Details', 'Total_Price', 'Paid', 'Remaining']
-        
-        # حلقة التعديل للطلبات
-        for idx, row in df_book.iterrows():
-            with st.expander(f"👗 {row['Name']} | الحالة: {row['Status']} | المتبقي: {row['Remaining']} ج.م"):
-                with st.form(key=f"form_{row['Booking_ID']}"):
-                    c1, c2 = st.columns(2)
-                    
-                    status_options = ["تحت التنفيذ", "جاهز", "تم التسليم"]
-                    current_status_idx = status_options.index(row['Status']) if row['Status'] in status_options else 0
-                    
-                    new_status = c1.selectbox("الحالة:", status_options, index=current_status_idx)
-                    new_total = c2.number_input("السعر الكلي:", value=float(row['Total_Price']))
-                    new_paid = c1.number_input("المبلغ المدفوع:", value=float(row['Paid']))
-                    
-                    # الحساب الأوتوماتيك للمتبقي
-                    new_remaining = new_total - new_paid
-                    c2.info(f"المتبقي: {new_remaining} ج.م")
+    # الحسابات
+    # إجمالي المحصل = كل اللي اتدفع في الطلبات النشطة + كل اللي اتدفع في الأرشيف
+    total_revenue = df_active['Paid'].sum() + df_archive['Paid'].sum()
+    
+    # المبالغ المنتظر تحصيلها = المتبقي في الطلبات النشطة فقط
+    pending_money = df_active['Remaining'].sum()
+    
+    # العرض
+    col1, col2 = st.columns(2)
+    with col1:
+        st.metric("عدد الطلبات الحالية", len(df_active))
+        st.metric("عدد الطلبات المكتملة", len(df_archive))
+    with col2:
+        st.metric("💰 إجمالي الأرباح المحصلة", f"{total_revenue:,.0f} ج.م")
+        st.metric("⏳ مبالغ منتظر تحصيلها", f"{pending_money:,.0f} ج.م")
+    
+    st.write("---")
+    st.info("💡 يتم حساب الأرباح من عمود 'المدفوع' (Paid) في كل الطلبات.")
 
-                    if st.form_submit_button("💾 تحديث الطلب"):
-                        cell = bookings_sheet.find(str(row['Booking_ID']))
-                        
-                        if new_status == "تم التسليم":
-                            new_paid = new_total
-                            new_remaining = 0
-                            completed_sheet.append_row([str(row['Booking_ID']), row['Name'], row['Registration_Date'], row['Delivery_Date'], "تم التسليم", row['Dress_Details'], new_total, new_total, 0])
-                            bookings_sheet.delete_rows(cell.row)
-                            st.success("تم التسليم والترحيل للأرشيف!")
-                        else:
-                            bookings_sheet.update(f"E{cell.row}:I{cell.row}", [[new_status, row['Dress_Details'], new_total, new_paid, new_remaining]])
-                            st.success("تم التحديث!")
-                        st.rerun()
-
-    # 3. قائمة الطلبات الحالية (نزلت تحت التعديل)
-    st.markdown("---")
-    st.header("📋 قائمة الطلبات الحالية (نظرة سريعة)")
-    if not df_book.empty:
-        st.dataframe(df_book[['Name', 'Status', 'Total_Price', 'Paid', 'Remaining']], use_container_width=True)
-        
 # --- 2. تسجيل عميلة جديدة ---
 elif choice == "➕ تسجيل عميلة جديدة":
     st.title("➕ تسجيل عميلة جديدة")
