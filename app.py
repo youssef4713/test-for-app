@@ -78,7 +78,7 @@ def get_data(sheet):
 # القائمة الجانبية
 choice = st.sidebar.radio(
     "🧭 القائمة الرئيسية:", 
-    ["📊 لوحة التحكم", "➕ تسجيل عميلة جديدة", "💰 الحسابات والطلبات", "📦 الطلبات المكتملة", "🔍 بحث علي عميل و تعديل", "👤 حساب العميل", "💰 مديونيات العملاء"],
+    ["📊 لوحة التحكم", "➕ تسجيل عميلة جديدة", "💰 الحسابات والطلبات", "📦 الطلبات المكتملة", "🔍 بحث علي عميل و تعديل", "👤 حساب العميل", "💰 مديونيات العملاء", "📅 تواريخ التسليم"],
     key="main_menu"  # <--- ده اللي هيخلينا نتحكم في الاختيار
 )
       
@@ -451,3 +451,42 @@ elif choice == "💰 مديونيات العملاء":
         )
     else:
         st.success("عاش يا وحش! مفيش أي مديونيات حالياً.")
+
+#--------------تواريخ التسليم----------------
+
+elif choice == "📅 تواريخ التسليم":
+    st.title("📅 مواعيد التسليم القادمة")
+    
+    # جلب البيانات
+    df_orders = get_data(bookings_sheet) # تأكد إن ده اسم شيت الطلبات عندك
+    
+    if not df_orders.empty:
+        # 1. فلترة الطلبات التي لم يتم تسليمها (افترضنا إن اللي مش "تم التسليم" لسه شغال)
+        # لو اسم العمود عندك مختلف (مثلاً 'الحالة') غيره في السطر ده
+        active_orders = df_orders[df_orders['Status'] != 'تم التسليم']
+        
+        if not active_orders.empty:
+            # 2. تحويل عمود التاريخ لنوع "تاريخ" عشان نقدر نرتبه
+            # اتأكد إن اسم العمود عندك 'Delivery_Date' أو غيره حسب شيت الإكسيل
+            active_orders['Delivery_Date'] = pd.to_datetime(active_orders['Delivery_Date'], dayfirst=True)
+            
+            # 3. ترتيب البيانات (من الأقرب للتاريخ الحالي للأبعد)
+            active_orders = active_orders.sort_values(by='Delivery_Date', ascending=True)
+            
+            # عرض الطلبات
+            for idx, row in active_orders.iterrows():
+                # تلوين الطلبات اللي ميعادها النهاردة أو فات (تنبيه)
+                delivery_date = row['Delivery_Date'].strftime('%Y-%m-%d')
+                
+                with st.expander(f"📦 {row['Customer_Name']} - موعد التسليم: {delivery_date}"):
+                    st.write(f"**اسم العميل:** {row['Customer_Name']}")
+                    st.write(f"**نوع الطلب:** {row['Order_Type']}")
+                    st.write(f"**المبلغ المتبقي:** {row['Remaining_Amount']} ج.م")
+                    st.write(f"**ملاحظات:** {row['Notes']}")
+                    # هنا تقدر تضيف زرار "تم التسليم" لو تحب
+        else:
+            st.success("عاش! لا توجد طلبات معلقة حالياً.")
+    else:
+        st.info("لا توجد بيانات طلبات لعرضها.")
+
+
