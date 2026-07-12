@@ -83,11 +83,12 @@ choice = st.sidebar.radio(
 )
       
 # --- 1. لوحة التحكم (KPIs) ---
-if choice == "📊 لوحة التحكم":
+elif choice == "📊 لوحة التحكم":
     st.title("📊 لوحة التحكم - الأتيليه")
     
     # دالة لجلب وتنظيف البيانات الخاصة بلوحة التحكم فقط
-    @st.cache_data(hash_funcs={gspread.worksheet.Worksheet: lambda _: None})
+    # تم التعديل هنا: استخدام sheet.title كـ hash key عشان الـ cache يفرق بين الشيتات
+    @st.cache_data(hash_funcs={gspread.worksheet.Worksheet: lambda sheet: sheet.title})
     def get_clean_df(sheet):
         df = get_data(sheet)
         if df.empty:
@@ -121,7 +122,7 @@ if choice == "📊 لوحة التحكم":
     with col2:
         st.metric("💰 إجمالي الأرباح المحصلة", f"{total_revenue:,.0f} ج.م")
         st.metric("⏳ مبالغ منتظر تحصيلها", f"{pending_money:,.0f} ج.م")
-
+        
 # --- 2. تسجيل عميلة جديدة ---
 elif choice == "➕ تسجيل عميلة جديدة":
     st.title("➕ تسجيل عميلة جديدة")
