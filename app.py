@@ -42,6 +42,11 @@ if sheets:
 else:
     st.stop() # لو الاتصال فشل، البرنامج هيقف عشان ميكملش وهو معندوش بيانات
 
+with st.sidebar:
+    st.write("---") # خط فاصل للتنظيم
+    if st.button("🔄 تحديث البيانات"):
+        st.cache_data.clear() # بيمسح الكاش
+        st.rerun()            # بيعمل تحديث عشان يسحب الداتا الجديدة
 
 def get_data(sheet):
     raw_data = sheet.get_all_values()
@@ -49,12 +54,6 @@ def get_data(sheet):
         df = pd.DataFrame(raw_data[1:], columns=[c.strip() for c in raw_data[0]])
         return df
     return pd.DataFrame()
-# زر التحديث
-ith st.sidebar:
-    st.write("---") # خط فاصل للتنظيم
-    if st.button("🔄 تحديث البيانات"):
-        st.cache_data.clear()  # بيمسح أي داتا قديمة في الذاكرة
-        st.rerun()            # بيعمل تحديث للصفحة عشان يسحب الداتا الجديدة فوراً
 
 # القائمة الجانبية
 choice = st.sidebar.selectbox("🧭 القائمة الرئيسية:", 
