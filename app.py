@@ -459,9 +459,9 @@ elif choice == "📅 تواريخ التسليم":
     
     # جلب البيانات
     df_orders = get_data(bookings_sheet) # تأكد إن ده اسم شيت الطلبات عندك
-    
+     st.write(df_orders.columns)
+
     if not df_orders.empty:
-        st.write(df_orders.columns)
         # 1. فلترة الطلبات التي لم يتم تسليمها (افترضنا إن اللي مش "تم التسليم" لسه شغال)
         # لو اسم العمود عندك مختلف (مثلاً 'الحالة') غيره في السطر ده
         active_orders = df_orders[df_orders['Status'] != 'تم التسليم']
