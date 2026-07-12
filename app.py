@@ -15,16 +15,31 @@ st.set_page_config(page_title="Lobna's System", page_icon="👗", layout="wide")
 # الاتصال بجوجل شيتس
 @st.cache_resource
 def get_all_sheets():
-try:
-    creds = st.secrets["gcp_service_account"]
-    gc = gspread.service_account_from_dict(creds)
-    sh = gc.open("Atelier_Database")
-    customers_sheet = sh.worksheet("customers")
-    bookings_sheet = sh.worksheet("bookings")
-    completed_sheet = sh.worksheet("completed_bookings") 
-except Exception as e:
-    st.error(f"خطأ في الاتصال بالسيرفر: {e}")
-    st.stop()
+    try:
+        creds = st.secrets["gcp_service_account"]
+        gc = gspread.service_account_from_dict(creds)
+        sh = gc.open("Atelier_Database")
+        
+        # بنرجعهم في قاموس عشان نستخدمهم بسهولة
+        return {
+            "customers": sh.worksheet("customers"),
+            "bookings": sh.worksheet("bookings"),
+            "completed": sh.worksheet("completed_bookings")
+        }
+    except Exception as e:
+        st.error(f"خطأ في الاتصال بالسيرفر: {e}")
+        return None
+
+# 2. استدعاء الدالة عشان نجهز المتغيرات اللي الكود بيعتمد عليها
+sheets = get_all_sheets()
+
+if sheets:
+    customers_sheet = sheets["customers"]
+    bookings_sheet = sheets["bookings"]
+    completed_sheet = sheets["completed"]
+else:
+    st.stop() # لو الاتصال فشل، البرنامج هيقف عشان ميكملش وهو معندوش بيانات
+
 
 def get_data(sheet):
     raw_data = sheet.get_all_values()
