@@ -246,7 +246,7 @@ elif choice == "📦 الطلبات المكتملة":
 elif choice == "🔍 بحث علي عميل و تعديل":
     st.title("🔍 بحث علي عميل و تعديل")
 
-        def to_num(val):
+    def to_num(val):
     try: return float(val)
     except: return 0.0
     
