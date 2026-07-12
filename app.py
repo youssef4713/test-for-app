@@ -110,7 +110,6 @@ elif choice == "💰 الحسابات والطلبات":
     # 1. قسم إضافة طلب جديد
     with st.expander("➕ إضافة طلب جديد"):
         with st.form("add_new_booking", clear_on_submit=True):
-            @st.cache_data(ttl=3600)
             df_cust = get_data(customers_sheet)
             cust_names = df_cust['Name'].tolist() if not df_cust.empty else []
             new_name = st.selectbox("اختر اسم العميل:", cust_names, index=None, placeholder="اختر العميل...")
