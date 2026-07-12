@@ -64,7 +64,7 @@ if choice == "📊 لوحة التحكم":
     st.title("📊 لوحة التحكم - الأتيليه")
     
     # دالة لجلب وتنظيف البيانات الخاصة بلوحة التحكم فقط
-    @st.cache_data(ttl=3600)
+    @st.cache_data(hash_funcs={gspread.worksheet.Worksheet: lambda _: None})
     def get_clean_df(sheet):
         df = get_data(sheet)
         if df.empty:
