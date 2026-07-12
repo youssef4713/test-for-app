@@ -422,8 +422,8 @@ elif choice == "💰 مديونيات العملاء":
     df_bookings = get_data(bookings_sheet)
     
     # 1. تنظيف البيانات: تحويل الأعمدة لأرقام
-    df_bookings['Total_Amount'] = pd.to_numeric(df_bookings['Total_Amount'], errors='coerce').fillna(0)
-    df_bookings['Paid_Amount'] = pd.to_numeric(df_bookings['Paid_Amount'], errors='coerce').fillna(0)
+    df_bookings['Total_Price'] = pd.to_numeric(df_bookings['Total_Amount'], errors='coerce').fillna(0)
+    df_bookings['Paid'] = pd.to_numeric(df_bookings['Paid_Amount'], errors='coerce').fillna(0)
     df_bookings['Remaining'] = pd.to_numeric(df_bookings['Remaining'], errors='coerce').fillna(0)
     
     # 2. تجميع البيانات: نجمع كل المديونيات + إجمالي الحساب + المدفوع لنفس الاسم
