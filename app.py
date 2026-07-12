@@ -59,120 +59,80 @@ if choice == "📊 لوحة التحكم":
 elif choice == "➕ تسجيل عميلة جديدة":
     st.title("➕ تسجيل عميلة جديدة")
     with st.form("new_customer", clear_on_submit=True):
-        name = st.text_input("اسم الزبونة")
-        phone = st.text_input("التليفون")
+        st.subheader("👤 البيانات الأساسية")
+        col1, col2 = st.columns(2)
+        name = col1.text_input("اسم الزبونة")
+        phone = col2.text_input("التليفون")
+        
+        st.subheader("📐 المقاسات")
+        c1, c2, c3 = st.columns(3)
+        chest = c1.text_input("دوران الصدر")
+        waist = c1.text_input("دوران الوسط")
+        chest_dart = c1.text_input("بنسة الصدر")
+        length = c2.text_input("الطول الكلي")
+        sleeve_width = c2.text_input("عرض الكم")
+        neck_to_waist = c2.text_input("طول الرقبة للوسط")
+        waist_to_bottom = c3.text_input("طول الوسط لأسفل")
+        hips = c3.text_input("دوران الأرداف")
+        crotch = c3.text_input("الحجر")
+        inseam = c3.text_input("الحجر الداخلي")
+        thigh_width = c3.text_input("عرض الفخذ")
+        thigh_length_k = c3.text_input("طول الفخذ للركبة")
+        notes = st.text_area("ملاحظات")
+        
         if st.form_submit_button("💾 حفظ بيانات العميل"):
-            customers_sheet.append_row(["QS-NEW", name, phone, "", "", "", "", "", "", "", "", "", "", "", "", "", datetime.now().strftime("%Y-%m-%d")])
+            customers_sheet.append_row(["QS-NEW", name, phone, chest, waist, hips, length, neck_to_waist, waist_to_bottom, crotch, inseam, thigh_width, thigh_length_k, chest_dart, sleeve_width, notes, datetime.now().strftime("%Y-%m-%d")])
             st.success(f"تم حفظ بيانات {name} بنجاح!")
-
 # --- 3. الحسابات والطلبات (مع ميزة تعديل الفلوس وأوتوماتيك التسليم) ---
 
 elif choice == "💰 الحسابات والطلبات":
     st.title("💰 الحسابات والطلبات")
 
-    # 1. قسم إضافة طلب جديد
+    # 1. قسم إضافة طلب جديد (مخفي في Expander عشان مياخدش مساحة)
     with st.expander("➕ إضافة طلب جديد"):
         with st.form("add_new_booking", clear_on_submit=True):
             df_cust = get_data(customers_sheet)
             cust_names = df_cust['Name'].tolist() if not df_cust.empty else []
             new_name = st.selectbox("اختر اسم العميل:", cust_names, index=None, placeholder="اختر العميل...")
-
+            
             delivery_date = st.date_input("📅 تاريخ التسليم المتوقع:")
             details = st.text_area("تفاصيل الطلب:")
             total_price = st.number_input("السعر الكلي:", min_value=0)
             paid_amount = st.number_input("المبلغ المدفوع:", min_value=0)
-
-            if st.form_submit_button("✅ إضافة الطلب"):
+            
+            if st.form_submit_button("✅ حفظ الطلب"):
                 if new_name is None:
-                    st.error("⚠️ من فضلك اختر اسم العميل أولاً!")
+                    st.error("⚠️ يرجى اختيار العميل!")
                 else:
                     booking_id = int(datetime.now().timestamp())
                     remaining = total_price - paid_amount
-                    # إضافة الصف في جوجل شيتس (الترتيب ضروري)
-                    bookings_sheet.append_row([
-                        str(booking_id), new_name, datetime.now().strftime("%Y-%m-%d"),
-                        delivery_date.strftime("%Y-%m-%d"), "تحت التنفيذ", details,
-                        float(total_price), float(paid_amount), float(remaining)
-                    ])
-                    st.success("تم إضافة الطلب بنجاح!")
+                    bookings_sheet.append_row([str(booking_id), new_name, datetime.now().strftime("%Y-%m-%d"), 
+                                               delivery_date.strftime("%Y-%m-%d"), "تحت التنفيذ", details, 
+                                               float(total_price), float(paid_amount), float(remaining)])
+                    st.success("تم إضافة الطلب!")
                     st.rerun()
 
-    st.write("---")
+    st.markdown("---")
+    st.header("📋 قائمة الطلبات الحالية")
 
-    # 2. قسم عرض وتعديل الطلبات
-elif choice == "💰 الحسابات والطلبات":
-    st.title("💰 الحسابات والطلبات")
-
-    # 1. قسم إضافة طلب جديد
-    with st.expander("➕ إضافة طلب جديد"):
-        with st.form("add_new_booking", clear_on_submit=True):
-            df_cust = get_data(customers_sheet)
-            cust_names = df_cust['Name'].tolist() if not df_cust.empty else []
-            new_name = st.selectbox("اختر اسم العميل:", cust_names, index=None, placeholder="اختر العميل...")
-
-            delivery_date = st.date_input("📅 تاريخ التسليم المتوقع:")
-            details = st.text_area("تفاصيل الطلب:")
-            total_price = st.number_input("السعر الكلي:", min_value=0)
-            paid_amount = st.number_input("المبلغ المدفوع:", min_value=0)
-
-            if st.form_submit_button("✅ إضافة الطلب"):
-                if new_name is None:
-                    st.error("⚠️ من فضلك اختر اسم العميل أولاً!")
-                else:
-                    booking_id = int(datetime.now().timestamp())
-                    remaining = total_price - paid_amount
-                    bookings_sheet.append_row([
-                        str(booking_id), new_name, datetime.now().strftime("%Y-%m-%d"),
-                        delivery_date.strftime("%Y-%m-%d"), "تحت التنفيذ", details,
-                        float(total_price), float(paid_amount), float(remaining)
-                    ])
-                    st.success("تم إضافة الطلب بنجاح!")
-                    st.rerun()
-
-    st.write("---")
-
-    # 2. قسم عرض وتعديل الطلبات
-elif choice == "💰 الحسابات والطلبات":
-    st.title("💰 الحسابات والطلبات")
-
-    # 1. قسم إضافة طلب جديد
-    with st.expander("➕ إضافة طلب جديد"):
-        with st.form("add_new_booking", clear_on_submit=True):
-            df_cust = get_data(customers_sheet)
-            cust_names = df_cust['Name'].tolist() if not df_cust.empty else []
-            new_name = st.selectbox("اختر اسم العميل:", cust_names, index=None, placeholder="اختر العميل...")
-
-            delivery_date = st.date_input("📅 تاريخ التسليم المتوقع:")
-            details = st.text_area("تفاصيل الطلب:")
-            total_price = st.number_input("السعر الكلي:", min_value=0)
-            paid_amount = st.number_input("المبلغ المدفوع:", min_value=0)
-
-            if st.form_submit_button("✅ إضافة الطلب"):
-                if new_name is None:
-                    st.error("⚠️ من فضلك اختر اسم العميل أولاً!")
-                else:
-                    booking_id = int(datetime.now().timestamp())
-                    remaining = total_price - paid_amount
-                    bookings_sheet.append_row([
-                        str(booking_id), new_name, datetime.now().strftime("%Y-%m-%d"),
-                        delivery_date.strftime("%Y-%m-%d"), "تحت التنفيذ", details,
-                        float(total_price), float(paid_amount), float(remaining)
-                    ])
-                    st.success("تم إضافة الطلب بنجاح!")
-                    st.rerun()
-
-    st.write("---")
-
-    # 2. قسم عرض وتعديل الطلبات
+    # 2. عرض الطلبات (الجزء اللي كان مختفي)
     df_book = get_data(bookings_sheet)
-
+    
     if df_book.empty:
-        st.info("لا توجد طلبات حالياً.")
+        st.info("لا توجد طلبات جارية حالياً.")
     else:
+        # ترتيب الأعمدة وتسميتها
         df_book.columns = ['Booking_ID', 'Name', 'Registration_Date', 'Delivery_Date', 'Status', 'Dress_Details', 'Total_Price', 'Paid', 'Remaining']
         
+        # عرض جدول سريع للطلبات
+        st.dataframe(df_book[['Name', 'Status', 'Total_Price', 'Paid', 'Remaining']], use_container_width=True)
+        
+        st.write("---")
+        st.subheader("⚙️ تعديل ومعالجة الطلبات:")
+        
+        # 3. حلقة التعديل للطلبات
         for idx, row in df_book.iterrows():
-            with st.expander(f"👗 {row['Name']} | 💰 متبقي: {row['Remaining']} ج.م"):
+            with st.expander(f"👗 {row['Name']} | الحالة: {row['Status']} | المتبقي: {row['Remaining']} ج.م"):
                 with st.form(key=f"form_{row['Booking_ID']}"):
                     c1, c2 = st.columns(2)
                     new_status = c1.selectbox("الحالة:", ["تحت التنفيذ", "جاهز", "تم التسليم"],
@@ -181,31 +141,25 @@ elif choice == "💰 الحسابات والطلبات":
                     new_total = c2.number_input("السعر الكلي:", value=float(row['Total_Price']))
                     new_paid = c1.number_input("المبلغ المدفوع:", value=float(row['Paid']))
                     
-                    # حساب المتبقي أوتوماتيكياً
+                    # الحساب الأوتوماتيك للمتبقي
                     new_remaining = new_total - new_paid
-                    c2.write(f"### المتبقي: {new_remaining} ج.م")
+                    c2.info(f"المتبقي: {new_remaining} ج.م")
 
                     if st.form_submit_button("💾 تحديث الطلب"):
                         cell = bookings_sheet.find(str(row['Booking_ID']))
                         
-                        # لو تم التسليم، نعتبر الحساب اتصفى
+                        # منطق التسليم
                         if new_status == "تم التسليم":
                             new_paid = new_total
                             new_remaining = 0
-                            
-                        # تحديث القيم في الشيت
-                        bookings_sheet.update(f"E{cell.row}:I{cell.row}", [[new_status, row['Dress_Details'], new_total, new_paid, new_remaining]])
-
-                        if new_status == "تم التسليم":
-                            completed_sheet.append_row([
-                                str(row['Booking_ID']), row['Name'], row['Registration_Date'],
-                                row['Delivery_Date'], "تم التسليم", row['Dress_Details'],
-                                new_total, new_total, 0
-                            ])
+                            # النقل للأرشيف
+                            completed_sheet.append_row([str(row['Booking_ID']), row['Name'], row['Registration_Date'], row['Delivery_Date'], "تم التسليم", row['Dress_Details'], new_total, new_total, 0])
                             bookings_sheet.delete_rows(cell.row)
                             st.success("تم التسليم والترحيل للأرشيف!")
                         else:
-                            st.success("تم تحديث البيانات!")
+                            # تحديث عادي
+                            bookings_sheet.update(f"E{cell.row}:I{cell.row}", [[new_status, row['Dress_Details'], new_total, new_paid, new_remaining]])
+                            st.success("تم التحديث!")
                         st.rerun()
                         
 # --- 4. الطلبات المكتملة ---
