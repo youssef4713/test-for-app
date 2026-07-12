@@ -111,7 +111,7 @@ elif choice == "➕ تسجيل عميلة جديدة":
 elif choice == "💰 الحسابات والطلبات":
     st.title("💰 الحسابات والطلبات")
 
-    # 1. قسم إضافة طلب جديد (Expander عشان الصفحة تبقى منظمة)
+    # 1. قسم إضافة طلب جديد
     with st.expander("➕ إضافة طلب جديد"):
         with st.form("add_new_booking", clear_on_submit=True):
             df_cust = get_data(customers_sheet)
@@ -136,35 +136,27 @@ elif choice == "💰 الحسابات والطلبات":
                     st.rerun()
 
     st.markdown("---")
-    st.header("📋 قائمة الطلبات الحالية")
-
-    # 2. عرض الطلبات
+    
+    # 2. تعديل ومعالجة الطلبات (جت في الأول عشان هي الأهم)
+    st.header("⚙️ تعديل ومعالجة الطلبات")
     df_book = get_data(bookings_sheet)
     
     if df_book.empty:
         st.info("لا توجد طلبات جارية حالياً.")
     else:
-        # ترتيب الأعمدة وتسميتها (تأكد من مطابقتها لترتيب الشيت)
+        # ترتيب الأعمدة وتسميتها
         df_book.columns = ['Booking_ID', 'Name', 'Registration_Date', 'Delivery_Date', 'Status', 'Dress_Details', 'Total_Price', 'Paid', 'Remaining']
         
-        # عرض جدول سريع للطلبات
-        st.dataframe(df_book[['Name', 'Status', 'Total_Price', 'Paid', 'Remaining']], use_container_width=True)
-        
-        st.write("---")
-        st.subheader("⚙️ تعديل ومعالجة الطلبات:")
-        
-        # 3. حلقة التعديل للطلبات
+        # حلقة التعديل للطلبات
         for idx, row in df_book.iterrows():
             with st.expander(f"👗 {row['Name']} | الحالة: {row['Status']} | المتبقي: {row['Remaining']} ج.م"):
                 with st.form(key=f"form_{row['Booking_ID']}"):
                     c1, c2 = st.columns(2)
                     
-                    # تحويل الحالة الحالية للـ index الصحيح
                     status_options = ["تحت التنفيذ", "جاهز", "تم التسليم"]
                     current_status_idx = status_options.index(row['Status']) if row['Status'] in status_options else 0
                     
                     new_status = c1.selectbox("الحالة:", status_options, index=current_status_idx)
-                    
                     new_total = c2.number_input("السعر الكلي:", value=float(row['Total_Price']))
                     new_paid = c1.number_input("المبلغ المدفوع:", value=float(row['Paid']))
                     
@@ -175,20 +167,23 @@ elif choice == "💰 الحسابات والطلبات":
                     if st.form_submit_button("💾 تحديث الطلب"):
                         cell = bookings_sheet.find(str(row['Booking_ID']))
                         
-                        # منطق التسليم
                         if new_status == "تم التسليم":
                             new_paid = new_total
                             new_remaining = 0
-                            # النقل للأرشيف
                             completed_sheet.append_row([str(row['Booking_ID']), row['Name'], row['Registration_Date'], row['Delivery_Date'], "تم التسليم", row['Dress_Details'], new_total, new_total, 0])
                             bookings_sheet.delete_rows(cell.row)
                             st.success("تم التسليم والترحيل للأرشيف!")
                         else:
-                            # تحديث عادي
                             bookings_sheet.update(f"E{cell.row}:I{cell.row}", [[new_status, row['Dress_Details'], new_total, new_paid, new_remaining]])
                             st.success("تم التحديث!")
                         st.rerun()
-                        
+
+    # 3. قائمة الطلبات الحالية (نزلت تحت التعديل)
+    st.markdown("---")
+    st.header("📋 قائمة الطلبات الحالية (نظرة سريعة)")
+    if not df_book.empty:
+        st.dataframe(df_book[['Name', 'Status', 'Total_Price', 'Paid', 'Remaining']], use_container_width=True)
+
 # --- 4. الطلبات المكتملة ---
 elif choice == "📦 الطلبات المكتملة":
     st.title("📦 أرشيف الطلبات المكتملة")
