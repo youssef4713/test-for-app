@@ -138,6 +138,17 @@ elif choice == "💰 الحسابات والطلبات":
     st.markdown("---")
     st.header("📋 قائمة الطلبات الحالية")
 
+        # 3. حلقة التعديل للطلبات
+        for idx, row in df_book.iterrows():
+            with st.expander(f"👗 {row['Name']} | الحالة: {row['Status']} | المتبقي: {row['Remaining']} ج.م"):
+                with st.form(key=f"form_{row['Booking_ID']}"):
+                    c1, c2 = st.columns(2)
+                    new_status = c1.selectbox("الحالة:", ["تحت التنفيذ", "جاهز", "تم التسليم"],
+                                              index=["تحت التنفيذ", "جاهز", "تم التسليم"].index(row['Status']) if row['Status'] in ["تحت التنفيذ", "جاهز", "تم التسليم"] else 0)
+                    
+                    new_total = c2.number_input("السعر الكلي:", value=float(row['Total_Price']))
+                    new_paid = c1.number_input("المبلغ المدفوع:", value=float(row['Paid']))
+
     # 2. عرض الطلبات (الجزء اللي كان مختفي)
     df_book = get_data(bookings_sheet)
     
@@ -153,17 +164,6 @@ elif choice == "💰 الحسابات والطلبات":
         st.write("---")
         st.subheader("⚙️ تعديل ومعالجة الطلبات:")
         
-        # 3. حلقة التعديل للطلبات
-        for idx, row in df_book.iterrows():
-            with st.expander(f"👗 {row['Name']} | الحالة: {row['Status']} | المتبقي: {row['Remaining']} ج.م"):
-                with st.form(key=f"form_{row['Booking_ID']}"):
-                    c1, c2 = st.columns(2)
-                    new_status = c1.selectbox("الحالة:", ["تحت التنفيذ", "جاهز", "تم التسليم"],
-                                              index=["تحت التنفيذ", "جاهز", "تم التسليم"].index(row['Status']) if row['Status'] in ["تحت التنفيذ", "جاهز", "تم التسليم"] else 0)
-                    
-                    new_total = c2.number_input("السعر الكلي:", value=float(row['Total_Price']))
-                    new_paid = c1.number_input("المبلغ المدفوع:", value=float(row['Paid']))
-                    
                     # الحساب الأوتوماتيك للمتبقي
                     new_remaining = new_total - new_paid
                     c2.info(f"المتبقي: {new_remaining} ج.م")
