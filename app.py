@@ -1,8 +1,8 @@
 import streamlit as st
 import gspread
+import time
 import pandas as pd
 import streamlit as st
-import gspread # أو أي مكتبات تانية عندك
 from datetime import datetime
 # ضيف ده بعد الـ import مباشرة
 @st.cache_resource(hash_funcs={gspread.worksheet.Worksheet: lambda _: None})
@@ -41,19 +41,32 @@ if sheets:
     completed_sheet = sheets["completed"]
 else:
     st.stop() # لو الاتصال فشل، البرنامج هيقف عشان ميكملش وهو معندوش بيانات
-
+#-----------زرار التحديث----------------
 with st.sidebar:
     st.write("---")
+    
+    # تحديد فترة الانتظار بالثواني (مثلاً 10 ثواني)
+    COOLDOWN_SECONDS = 10 
+
     if st.button("🔄 تحديث البيانات"):
-        # امسح الكاش الخاص بالاتصالات
-        st.cache_resource.clear() 
-        # امسح الكاش الخاص بالبيانات والجداول (ده اللي كان ناقص!)
-        st.cache_data.clear() 
-        
-        # ارجع لأول صفحة عشان نضمن مفيش حاجة معلقة
-        st.session_state["main_menu"] = "📊 لوحة التحكم" 
-        
-        st.rerun()
+        # جيب الوقت الحالي
+        current_time = time.time()
+        # جيب آخر وقت تم فيه التحديث (لو مفيش يبقى 0)
+        last_refresh = st.session_state.get("last_refresh", 0)
+
+        # لو الفرق أكبر من 10 ثواني، كمل
+        if current_time - last_refresh > COOLDOWN_SECONDS:
+            st.cache_resource.clear()
+            st.cache_data.clear()
+            st.session_state["main_menu"] = "📊 لوحة التحكم"
+            
+            # سجل وقت التحديث الجديد
+            st.session_state["last_refresh"] = current_time
+            st.rerun()
+        else:
+            # لو أقل، طلع رسالة تحذير
+            remaining = int(COOLDOWN_SECONDS - (current_time - last_refresh))
+            st.warning(f"اهدى شوية! استنى {remaining} ثانية قبل التحديث تاني.")
         
 def get_data(sheet):
     raw_data = sheet.get_all_values()
