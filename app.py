@@ -248,11 +248,10 @@ elif choice == "🔍 بحث علي عميل و تعديل":
     
     # جلب البيانات
     df_cust = get_data(customers_sheet)
-    
-    # مربع البحث
     search = st.text_input("🔎 ابحث باسم العميل:")
     
     if not df_cust.empty:
+        # البحث والفلترة
         if search:
             display_df = df_cust[df_cust['Name'].str.contains(search, case=False, na=False)]
         else:
@@ -260,13 +259,11 @@ elif choice == "🔍 بحث علي عميل و تعديل":
             
         if not display_df.empty:
             for idx, row in display_df.iterrows():
-                # استخدام الاسم لفتح العميل
                 with st.expander(f"👤 {row['Name']}"):
-                    # إضافة key فريد للفورم بناءً على الـ idx
                     with st.form(f"edit_meas_{idx}"):
                         c1, c2, c3 = st.columns(3)
                         
-                        # إضافة key فريد لكل خانة عشان الداتا متلخبطش
+                        # الحقول
                         new_chest = c1.text_input("دوران الصدر", value=str(row.get('Chest', '')), key=f"chest_{idx}")
                         new_waist = c1.text_input("دوران الوسط", value=str(row.get('Waist', '')), key=f"waist_{idx}")
                         new_dart = c1.text_input("بنسة الصدر", value=str(row.get('Chest_Dart', '')), key=f"dart_{idx}")
@@ -280,31 +277,52 @@ elif choice == "🔍 بحث علي عميل و تعديل":
                         new_waist_bot = c3.text_input("طول الوسط لأسفل", value=str(row.get('Waist_to_Bottom', '')), key=f"wbot_{idx}")
                         new_hips = c3.text_input("دوران الأرداف", value=str(row.get('Hips', '')), key=f"hips_{idx}")
                         new_crotch = c3.text_input("الحجر", value=str(row.get('Crotch', '')), key=f"crotch_{idx}")
-                        new_thigh_knee = c3.text_input("طول الفخذ للركبة", value=str(row.get('thigh_length_k', '')), key=f"thk_{idx}")
-                        
+                        new_thigh_knee = c3.text_input("طول الفخذ للركبة", value=str(row.get('Thigh_to_Knee', '')), key=f"thk_{idx}")
                         new_notes = st.text_area("ملاحظات", value=str(row.get('Notes', '')), key=f"notes_{idx}")
                         
                         if st.form_submit_button("💾 تحديث المقاسات"):
                             try:
-                                # البحث عن رقم السطر الفعلي للعميل
+                                # 1. تحديد رقم السطر الفعلي
                                 cell = customers_sheet.find(row['Name'])
                                 actual_row_idx = cell.row
                                 
-                                # ترتيب القيم بالظبط (لازم تطابق أعمدة الشيت من D لـ P)
-                                updated_values = [
-                                    new_chest, new_waist, new_dart, new_thigh, 
-                                    new_len, new_sleeve, new_neck, new_inseam, 
-                                    new_waist_bot, new_hips, new_crotch, new_thigh_knee, new_notes
+                                # 2. جلب عناوين الأعمدة الحالية من الشيت
+                                headers = customers_sheet.row_values(1)
+                                
+                                # 3. نظام "الربط الصارم" (Mapping)
+                                # ده بيحول اسم العمود لرقم العمود اللي موجود فعلياً في الشيت
+                                def get_col_idx(name):
+                                    try:
+                                        return headers.index(name) + 1
+                                    except:
+                                        raise Exception(f"العمود '{name}' غير موجود في ملف الإكسيل!")
+
+                                # 4. تجهيز قائمة التحديثات (الربط بالاسم)
+                                updates = [
+                                    (get_col_idx('Chest'), new_chest),
+                                    (get_col_idx('Waist'), new_waist),
+                                    (get_col_idx('Chest_Dart'), new_dart),
+                                    (get_col_idx('Thigh_Width'), new_thigh),
+                                    (get_col_idx('Length'), new_len),
+                                    (get_col_idx('Sleeve_Width'), new_sleeve),
+                                    (get_col_idx('Neck_to_Waist'), new_neck),
+                                    (get_col_idx('Inseam'), new_inseam),
+                                    (get_col_idx('Waist_to_Bottom'), new_waist_bot),
+                                    (get_col_idx('Hips'), new_hips),
+                                    (get_col_idx('Crotch'), new_crotch),
+                                    (get_col_idx('Thigh_to_Knee'), new_thigh_knee),
+                                    (get_col_idx('Notes'), new_notes)
                                 ]
                                 
-                                # تحديث النطاق كامل
-                                customers_sheet.update(f"D{actual_row_idx}:P{actual_row_idx}", [updated_values])
+                                # 5. التنفيذ: تحديث خلية خلية (بطيئة شوية بس "مستحيل" تغلط)
+                                for col_idx, value in updates:
+                                    customers_sheet.update_cell(actual_row_idx, col_idx, value)
                                 
                                 st.success(f"تم تحديث بيانات {row['Name']} بنجاح!")
                                 st.rerun()
                                 
                             except Exception as e:
-                                st.error(f"حدث خطأ: {e}")
+                                st.error(f"⚠️ خطأ في التحديث: {e}")
         else:
             st.warning("لا يوجد عملاء بهذا الاسم.")
     else:
