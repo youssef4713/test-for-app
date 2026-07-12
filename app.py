@@ -445,7 +445,7 @@ elif choice == "💰 مديونيات العملاء":
                 # عرض أوردرات العميل الواحد جوه المجلد
                 for idx, row in group.iterrows():
                     st.write("---")
-                    st.write(f"**الطلب:** {row['Order_Type']} - **المتبقي:** {row['Remaining']} ج.م")
+                    st.write(f"**الطلب:** {row['Status']} - **المتبقي:** {row['Remaining']} ج.م")
                     
                     with st.form(f"update_{idx}"):
                         # خانات التعديل
