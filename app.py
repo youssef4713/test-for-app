@@ -1,6 +1,8 @@
 import streamlit as st
 import gspread
 import pandas as pd
+import streamlit as st
+import gspread # أو أي مكتبات تانية عندك
 from datetime import datetime
 # ضيف ده بعد الـ import مباشرة
 @st.cache_resource(hash_funcs={gspread.worksheet.Worksheet: lambda _: None})
@@ -47,6 +49,12 @@ def get_data(sheet):
         df = pd.DataFrame(raw_data[1:], columns=[c.strip() for c in raw_data[0]])
         return df
     return pd.DataFrame()
+# زر التحديث
+ith st.sidebar:
+    st.write("---") # خط فاصل للتنظيم
+    if st.button("🔄 تحديث البيانات"):
+        st.cache_data.clear()  # بيمسح أي داتا قديمة في الذاكرة
+        st.rerun()            # بيعمل تحديث للصفحة عشان يسحب الداتا الجديدة فوراً
 
 # القائمة الجانبية
 choice = st.sidebar.selectbox("🧭 القائمة الرئيسية:", 
