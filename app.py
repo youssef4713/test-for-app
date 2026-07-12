@@ -30,8 +30,7 @@ choice = st.sidebar.selectbox("🧭 القائمة الرئيسية:",
                               ["📊 لوحة التحكم", "➕ تسجيل عميلة جديدة", "💰 الحسابات والطلبات", "📦 الطلبات المكتملة", "🔍 بحث علي عميل و تعديل"])
 
 # --- 1. لوحة التحكم ---
-# تأكد إن اختيار الصفحة بيبدأ بـ if وبعدين الـ elifات
-if choice == "📊 لوحة التحكم":
+elif choice == "📊 لوحة التحكم":
     st.title("📊 لوحة التحكم - الأتيليه")
     
     # 1. جلب وتجهيز البيانات
@@ -45,7 +44,12 @@ if choice == "📊 لوحة التحكم":
     
     df_all = pd.concat([df_active, df_archive], ignore_index=True)
     
-    # 2. حسابات الشهر الحالي (يوليو 2026)
+    # --- التعديل هنا: تحويل البيانات لأرقام عشان الجمع يطلع صح ---
+    df_all['Paid'] = pd.to_numeric(df_all['Paid'], errors='coerce').fillna(0)
+    df_all['Remaining'] = pd.to_numeric(df_all['Remaining'], errors='coerce').fillna(0)
+    # --------------------------------------------------------
+    
+    # 2. حسابات الشهر الحالي
     df_all['Registration_Date'] = pd.to_datetime(df_all['Registration_Date'], errors='coerce')
     df_month = df_all[(df_all['Registration_Date'].dt.month == 7) & (df_all['Registration_Date'].dt.year == 2026)]
     
@@ -69,77 +73,6 @@ if choice == "📊 لوحة التحكم":
     st.write("---")
     st.info("💡 تم حساب البيانات بناءً على طلبات شهر يوليو 2026")
 
-elif choice == "💰 الحسابات والطلبات":
-    st.title("💰 الحسابات والطلبات")
-    
-    with st.expander("➕ إضافة طلب جديد"):
-        with st.form("add_new_booking"):
-            df_cust = get_data(customers_sheet)
-            cust_names = df_cust['Name'].tolist() if not df_cust.empty else []
-            new_name = st.selectbox("اختر اسم العميل:", cust_names, index=None, placeholder="اختر العميل...")
-            
-            delivery_date = st.date_input("📅 تاريخ التسليم المتوقع:")
-            details = st.text_area("تفاصيل الطلب:")
-            total_price = st.number_input("السعر الكلي:", min_value=0)
-            paid_amount = st.number_input("المبلغ المدفوع:", min_value=0)
-            
-            if st.form_submit_button("✅ إضافة الطلب"):
-                if new_name is None:
-                    st.error("⚠️ من فضلك اختر اسم العميل أولاً!")
-                else:
-                    booking_id = int(datetime.now().timestamp()) 
-                    remaining = total_price - paid_amount
-                    bookings_sheet.append_row([
-                        str(booking_id), new_name, datetime.now().strftime("%Y-%m-%d"), 
-                        delivery_date.strftime("%Y-%m-%d"), "تحت التنفيذ", details, 
-                        float(total_price), float(paid_amount), float(remaining)
-                    ])
-                    st.success("تم إضافة الطلب!")
-                    st.rerun()
-
-    st.write("---")
-    
-    df_book = get_data(bookings_sheet)
-    if not df_book.empty:
-        df_book.columns = ['Booking_ID', 'Name', 'Registration_Date', 'Delivery_Date', 'Status', 'Dress_Details', 'Total_Price', 'Paid', 'Remaining']
-        
-        # ترتيب حسب أقرب ميعاد تسليم
-        df_book['Delivery_Date'] = pd.to_datetime(df_book['Delivery_Date'], errors='coerce')
-        df_book = df_book.sort_values(by='Delivery_Date', ascending=True)
-        
-        for idx, row in df_book.iterrows():
-            b_id = str(row.get('Booking_ID', ''))
-            name_val = row.get('Name', 'بدون اسم')
-            deliv_date = row.get('Delivery_Date').strftime('%Y-%m-%d') if pd.notnull(row.get('Delivery_Date')) else '-'
-            status_val = row.get('Status', 'تحت التنفيذ')
-            
-            with st.expander(f"👗 {name_val} | ⏳ تسليم: {deliv_date} | الحالة: {status_val}"):
-                with st.form(key=f"edit_{b_id}_{idx}"):
-                    new_details = st.text_area("تفاصيل الطلب:", value=row.get('Dress_Details', ''))
-                    new_deliv_date = st.date_input("تعديل التاريخ:", value=pd.to_datetime(deliv_date))
-                    new_status = st.selectbox("الحالة:", ["تحت التنفيذ", "جاهز", "تم التسليم"], 
-                                             index=["تحت التنفيذ", "جاهز", "تم التسليم"].index(status_val) if status_val in ["تحت التنفيذ", "جاهز", "تم التسليم"] else 0)
-                    
-                    if st.form_submit_button("💾 تحديث"):
-                        cell = bookings_sheet.find(b_id)
-                        row_idx = cell.row
-                        
-                        if new_status == "تم التسليم":
-                            archive_row = [
-                                str(row['Booking_ID']), str(row['Name']), str(row['Registration_Date']),
-                                new_deliv_date.strftime("%Y-%m-%d"), "تم التسليم", str(new_details),
-                                float(row['Total_Price']), float(row['Paid']), float(row['Remaining'])
-                            ]
-                            completed_sheet.append_row(archive_row)
-                            bookings_sheet.delete_rows(row_idx)
-                            st.success("تم التسليم والترحيل للأرشيف!")
-                        else:
-                            bookings_sheet.update_cell(row_idx, 4, new_deliv_date.strftime("%Y-%m-%d"))
-                            bookings_sheet.update_cell(row_idx, 5, new_status)
-                            bookings_sheet.update_cell(row_idx, 6, new_details)
-                            st.success("تم التحديث!")
-                        st.rerun()
-                        
 # --- 2. تسجيل عميلة جديدة ---
 elif choice == "➕ تسجيل عميلة جديدة":
     st.title("➕ تسجيل عميلة جديدة")
