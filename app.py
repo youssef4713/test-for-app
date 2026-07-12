@@ -279,10 +279,10 @@ elif choice == "🔍 بحث علي عميل و تعديل":
                         new_neck = c2.number_input("طول الرقبة للوسط", value=to_num(row.get('Neck_to_Waist', '')), format="%f", key=f"neck_{idx}")
                         new_inseam = c2.number_input("الحجر الداخلي", value=to_num(row.get('Inseam', '')), format="%f", key=f"inseam_{idx}")
                         
-                        new_waist_bot = c3.number_input("طول الوسط لأسفل", value=str(row.get('Waist_to_Bottom', '')), format="%f", key=f"wbot_{idx}")
-                        new_hips = c3.number_input("دوران الأرداف", value=str(row.get('Hips', '')), format="%f", key=f"hips_{idx}")
-                        new_crotch = c3.number_input("الحجر", value=str(row.get('Crotch', '')), format="%f", key=f"crotch_{idx}")
-                        new_thigh_knee = c3.number_input("طول الفخذ للركبة", value=str(row.get('thigh_length_k', '')), format="%f", key=f"thk_{idx}")
+                        new_waist_bot = c3.number_input("طول الوسط لأسفل", value=to_num(row.get('Waist_to_Bottom', '')), format="%f", key=f"wbot_{idx}")
+                        new_hips = c3.number_input("دوران الأرداف", value=to_num(row.get('Hips', '')), format="%f", key=f"hips_{idx}")
+                        new_crotch = c3.number_input("الحجر", value=to_num(row.get('Crotch', '')), format="%f", key=f"crotch_{idx}")
+                        new_thigh_knee = c3.number_input("طول الفخذ للركبة", value=to_num(row.get('thigh_length_k', '')), format="%f", key=f"thk_{idx}")
                         new_notes = st.text_area("ملاحظات", value=str(row.get('Notes', '')), key=f"notes_{idx}")
                         
                         if st.form_submit_button("💾 تحديث المقاسات"):
