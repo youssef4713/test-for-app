@@ -167,17 +167,17 @@ elif choice == "💰 الحسابات والطلبات":
             delivery_date = st.date_input("📅 تاريخ التسليم المتوقع:")
             details = st.text_area("تفاصيل الطلب:")
             total_price = st.number_input("السعر الكلي:", min_value=0)
-            paid_amount = st.number_input("المبلغ المدفوع:", min_value=0)
+            Paid = st.number_input("المبلغ المدفوع:", min_value=0)
             
             if st.form_submit_button("✅ حفظ الطلب"):
                 if new_name is None:
                     st.error("⚠️ يرجى اختيار العميل!")
                 else:
                     booking_id = int(datetime.now().timestamp())
-                    remaining = total_price - paid_amount
+                    remaining = total_price - Paid
                     bookings_sheet.append_row([str(booking_id), new_name, datetime.now().strftime("%Y-%m-%d"), 
                                              delivery_date.strftime("%Y-%m-%d"), "تحت التنفيذ", details, 
-                                             float(total_price), float(paid_amount), float(remaining)])
+                                             float(total_price), float(Paid), float(remaining)])
                     st.success("تم إضافة الطلب!")
                     st.rerun()
 
@@ -422,12 +422,12 @@ elif choice == "💰 مديونيات العملاء":
     df_bookings = get_data(bookings_sheet)
     
     # 1. تنظيف البيانات: تحويل الأعمدة لأرقام
-    df_bookings['Total_Price'] = pd.to_numeric(df_bookings['Total_Amount'], errors='coerce').fillna(0)
-    df_bookings['Paid'] = pd.to_numeric(df_bookings['Paid_Amount'], errors='coerce').fillna(0)
+    df_bookings['Total_Price'] = pd.to_numeric(df_bookings['Total_Price'], errors='coerce').fillna(0)
+    df_bookings['Paid'] = pd.to_numeric(df_bookings['Paid'], errors='coerce').fillna(0)
     df_bookings['Remaining'] = pd.to_numeric(df_bookings['Remaining'], errors='coerce').fillna(0)
     
     # 2. تجميع البيانات: نجمع كل المديونيات + إجمالي الحساب + المدفوع لنفس الاسم
-    debt_summary = df_bookings.groupby('Name')[['Total_Amount', 'Paid_Amount', 'Remaining']].sum().reset_index()
+    debt_summary = df_bookings.groupby('Name')[['Total_Price', 'Paid', 'Remaining']].sum().reset_index()
     
     # 3. الفلترة: نشيل الناس اللي مديونيتهم 0
     debt_summary = debt_summary[debt_summary['Remaining'] > 0]
@@ -446,8 +446,8 @@ elif choice == "💰 مديونيات العملاء":
             hide_index=True,
             column_config={
                 "Name": "اسم العميل",
-                "Total_Amount": "إجمالي الحساب (ج.م)",
-                "Paid_Amount": "إجمالي المدفوع (ج.م)",
+                "Total_Price": "إجمالي الحساب (ج.م)",
+                "Paid": "إجمالي المدفوع (ج.م)",
                 "Remaining": "إجمالي المديونية (ج.م)"
             }
         )
