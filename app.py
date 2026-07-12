@@ -440,7 +440,6 @@ elif choice == "💰 مديونيات العملاء":
         total_all = df_debtors['Remaining'].sum()
         st.metric("💰 إجمالي المديونيات عند كل العملاء", f"{total_all:,.0f} ج.م")
         
-        # تجميع البيانات حسب اسم العميل
         grouped = df_debtors.groupby('Name')
         
         for name, group in grouped:
@@ -450,20 +449,19 @@ elif choice == "💰 مديونيات العملاء":
                 for idx, row in group.iterrows():
                     st.write("---")
                     
-                    # --- عرض تفاصيل الطلب (قراءة فقط) ---
-                    # بنستخدم .get عشان لو العمود مش موجود ميطلعش خطأ
+                    # عرض تفاصيل الطلب (قراءة فقط)
                     details_text = row.get('Dress_Details', 'لا توجد تفاصيل إضافية')
-                    
                     st.write(f"**الطلب:** {row.get('Order_Type', 'غير محدد')}")
                     st.text_area("تفاصيل الطلب:", value=details_text, disabled=True, key=f"det_{idx}")
-                    st.write(f"**المتبقي:** {row['Remaining']:,.0f} ج.م")
-                    # -----------------------------------
                     
                     with st.form(f"update_{idx}"):
                         st.write(f"💳 المدفوع حالياً: {row['Paid']} ج.م")
                         
+                        # --- خانة الإجمالي بقت مقفولة (disabled=True) ---
+                        st.number_input("إجمالي الحساب (للعلم فقط):", value=float(row['Total_Price']), disabled=True)
+                        
+                        # خانة إضافة دفعة جديدة
                         new_payment = st.number_input("إضافة دفعة جديدة:", value=0.0, step=50.0, key=f"p_{idx}")
-                        new_total = st.number_input("تعديل إجمالي الحساب:", value=float(row['Total_Price']), step=50.0, key=f"t_{idx}")
 
                         if st.form_submit_button("💾 حفظ التحديث"):
                             try:
@@ -474,7 +472,7 @@ elif choice == "💰 مديونيات العملاء":
                                 headers = bookings_sheet.row_values(1)
                                 def get_col_idx(col_name): return headers.index(col_name) + 1
                                 
-                                bookings_sheet.update_cell(actual_row_idx, get_col_idx('Total_Price'), str(new_total))
+                                # التحديث هنا هيحدث المدفوع فقط، الإجمالي يفضل زي ما هو
                                 bookings_sheet.update_cell(actual_row_idx, get_col_idx('Paid'), str(updated_paid))
                                 
                                 st.success("تم التحديث!")
@@ -482,7 +480,7 @@ elif choice == "💰 مديونيات العملاء":
                             except Exception as e:
                                 st.error(f"خطأ: {e}")
     else:
-        st.success("مفيش أي مديونيات حالياً. عاش يا وحش!")
+        st.success("مفيش أي مديونيات حالياً.")
         
 #--------------تواريخ التسليم----------------
 
