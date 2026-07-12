@@ -6,6 +6,28 @@ import pandas as pd
 import streamlit as st
 from datetime import datetime
 # ضيف ده بعد الـ import مباشرة
+
+def login():
+    if 'logged_in' not in st.session_state:
+        st.session_state['logged_in'] = False
+
+    if not st.session_state['logged_in']:
+        st.title("🔐 تسجيل الدخول")
+        password = st.text_input("أدخل كلمة المرور:", type="password")
+        if st.button("دخول"):
+            if password == "4713": # الباسورد بتاعك
+                st.session_state['logged_in'] = True
+                st.rerun()
+            else:
+                st.error("كلمة المرور غلط يا بطل!")
+        st.stop() # ده بيوقف تحميل باقي الموقع
+
+# استدعاء الدالة في أول الكود
+login()
+
+# من هنا بتبدأ باقي الكود بتاعك (القائمة الجانبية والصفحات)
+# ده كدة معناه إن الكود ده مش هيتقري غير لما الـ logged_in تبقى True
+
 @st.cache_resource(hash_funcs={gspread.worksheet.Worksheet: lambda _: None})
 def get_cached_sheet(sheet_name):
     # افترضنا إنك مسمي الـ client بتاعك 'client' في الكود، لو مسميه حاجة تانية غير الاسم هنا
