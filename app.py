@@ -421,11 +421,12 @@ elif choice == "💰 مديونيات العملاء":
     # 1. جلب البيانات
     df = get_data(bookings_sheet)
     
-    # تحويل الأعمدة لأرقام للتعامل معها
-    df['Total_Amount'] = pd.to_numeric(df['Total_Amount'], errors='coerce').fillna(0)
-    df['Paid_Amount'] = pd.to_numeric(df['Paid_Amount'], errors='coerce').fillna(0)
-    # حساب المتبقي (لو العمود مش موجود في الشيت، بيحسبه أوتوماتيك)
-    df['Remaining'] = df['Total_Amount'] - df['Paid_Amount']
+    # تحويل الأعمدة لأرقام (مع الأسماء الجديدة)
+    df['Total_Price'] = pd.to_numeric(df['Total_Price'], errors='coerce').fillna(0)
+    df['Paid'] = pd.to_numeric(df['Paid'], errors='coerce').fillna(0)
+    
+    # حساب المتبقي
+    df['Remaining'] = df['Total_Price'] - df['Paid']
     
     # 2. فلترة الأوردرات اللي عليها مديونية فقط
     debtors = df[df['Remaining'] > 0]
@@ -434,32 +435,28 @@ elif choice == "💰 مديونيات العملاء":
         total_debt = debtors['Remaining'].sum()
         st.metric("💰 إجمالي المديونيات في الأتيليه", f"{total_debt:,.0f} ج.م")
         
-        # 3. عرض كل أوردر مديون في Expandable Box (نفس فكرة صفحة البحث)
+        # 3. عرض كل أوردر مديون
         for idx, row in debtors.iterrows():
             with st.expander(f"👤 {row['Name']} - متبقي: {row['Remaining']} ج.م"):
                 with st.form(f"debt_form_{idx}"):
                     st.write(f"**نوع الطلب:** {row.get('Order_Type', 'غير محدد')}")
                     
-                    # خانات التعديل
-                    new_total = st.number_input("إجمالي الحساب:", value=float(row['Total_Amount']), step=50.0, key=f"total_{idx}")
-                    new_paid = st.number_input("المبلغ المدفوع:", value=float(row['Paid_Amount']), step=50.0, key=f"paid_{idx}")
+                    # خانات التعديل (الأسماء الجديدة هنا)
+                    new_total = st.number_input("إجمالي الحساب:", value=float(row['Total_Price']), step=50.0, key=f"total_{idx}")
+                    new_paid = st.number_input("المبلغ المدفوع:", value=float(row['Paid']), step=50.0, key=f"paid_{idx}")
                     
                     if st.form_submit_button("💾 تحديث المديونية"):
-                        # كود التحديث في الشيت
                         try:
-                            # البحث عن الصف في الشيت (بنفس طريقتك في صفحة البحث)
-                            cell = bookings_sheet.find(row['Name']) # تأكد من دقة البحث هنا
-                            actual_row_idx = cell.row
-                            
-                            # تحديث الأعمدة
+                            # تحديث الصف
+                            actual_row_idx = idx + 2 
                             headers = bookings_sheet.row_values(1)
-                            # دالة مساعدة لتحديد مكان العمود
                             def get_col_idx(name): return headers.index(name) + 1
                             
-                            bookings_sheet.update_cell(actual_row_idx, get_col_idx('Total_Amount'), str(new_total))
-                            bookings_sheet.update_cell(actual_row_idx, get_col_idx('Paid_Amount'), str(new_paid))
+                            # التحديث باستخدام الأسماء الجديدة
+                            bookings_sheet.update_cell(actual_row_idx, get_col_idx('Total_Price'), str(new_total))
+                            bookings_sheet.update_cell(actual_row_idx, get_col_idx('Paid'), str(new_paid))
                             
-                            st.success("تم تحديث الحساب!")
+                            st.success("تم تحديث الحساب بنجاح!")
                             st.rerun()
                         except Exception as e:
                             st.error(f"خطأ في التحديث: {e}")
