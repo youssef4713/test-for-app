@@ -18,6 +18,7 @@ except Exception as e:
     st.error(f"خطأ في الاتصال بالسيرفر: {e}")
     st.stop()
 
+@st.cache_data(ttl=3600)
 def get_data(sheet):
     raw_data = sheet.get_all_values()
     if len(raw_data) > 1:
@@ -35,6 +36,7 @@ if choice == "📊 لوحة التحكم":
     
     # دالة لجلب وتنظيف البيانات الخاصة بلوحة التحكم فقط
     def get_clean_df(sheet):
+        @st.cache_data(ttl=3600)
         df = get_data(sheet)
         if df.empty:
             return pd.DataFrame(columns=['Booking_ID', 'Name', 'Registration_Date', 'Delivery_Date', 'Status', 'Dress_Details', 'Total_Price', 'Paid', 'Remaining'])
@@ -108,6 +110,7 @@ elif choice == "💰 الحسابات والطلبات":
     # 1. قسم إضافة طلب جديد
     with st.expander("➕ إضافة طلب جديد"):
         with st.form("add_new_booking", clear_on_submit=True):
+            @st.cache_data(ttl=3600)
             df_cust = get_data(customers_sheet)
             cust_names = df_cust['Name'].tolist() if not df_cust.empty else []
             new_name = st.selectbox("اختر اسم العميل:", cust_names, index=None, placeholder="اختر العميل...")
@@ -133,6 +136,7 @@ elif choice == "💰 الحسابات والطلبات":
     
     # 2. تعديل ومعالجة الطلبات (جت في الأول عشان هي الأهم)
     st.header("⚙️ تعديل ومعالجة الطلبات")
+    @st.cache_data(ttl=3600)
     df_book = get_data(bookings_sheet)
     
     if df_book.empty:
@@ -181,6 +185,7 @@ elif choice == "💰 الحسابات والطلبات":
 # --- 4. الطلبات المكتملة ---
 elif choice == "📦 الطلبات المكتملة":
     st.title("📦 أرشيف الطلبات المكتملة")
+    @st.cache_data(ttl=3600)
     df_comp = get_data(completed_sheet)
     st.dataframe(df_comp)
 
@@ -188,6 +193,7 @@ elif choice == "📦 الطلبات المكتملة":
 elif choice == "🔍 بحث علي عميل و تعديل":
     st.title("🔍 بحث علي عميل و تعديل")
     
+    @st.cache_data(ttl=3600)
     df_cust = get_data(customers_sheet)
     search = st.text_input("🔎 ابحث باسم العميل أو اختر من القائمة أدناه:")
     
