@@ -37,23 +37,25 @@ elif choice == "📊 لوحة التحكم":
     df_active = get_data(bookings_sheet)
     df_archive = get_data(completed_sheet)
     
+    # أسماء الأعمدة لضمان تطابق البيانات
     cols = ['Booking_ID', 'Name', 'Registration_Date', 'Delivery_Date', 'Status', 'Dress_Details', 'Total_Price', 'Paid', 'Remaining']
     
     if not df_active.empty: df_active.columns = cols
     if not df_archive.empty: df_archive.columns = cols
     
+    # دمج البيانات من الشيتين
     df_all = pd.concat([df_active, df_archive], ignore_index=True)
     
-    # --- التعديل هنا: تحويل البيانات لأرقام عشان الجمع يطلع صح ---
+    # 2. تحويل البيانات لأرقام (لحل مشكلة الحسابات)
     df_all['Paid'] = pd.to_numeric(df_all['Paid'], errors='coerce').fillna(0)
     df_all['Remaining'] = pd.to_numeric(df_all['Remaining'], errors='coerce').fillna(0)
-    # --------------------------------------------------------
+    df_all['Total_Price'] = pd.to_numeric(df_all['Total_Price'], errors='coerce').fillna(0)
     
-    # 2. حسابات الشهر الحالي
+    # 3. تحويل التواريخ وتصفية بيانات الشهر الحالي (يوليو 2026)
     df_all['Registration_Date'] = pd.to_datetime(df_all['Registration_Date'], errors='coerce')
     df_month = df_all[(df_all['Registration_Date'].dt.month == 7) & (df_all['Registration_Date'].dt.year == 2026)]
     
-    # 3. استخراج الأرقام
+    # 4. استخراج الأرقام للحسابات
     total_orders = len(df_month)
     delivered_orders = df_month[df_month['Status'] == 'تم التسليم']
     active_orders = df_month[df_month['Status'] != 'تم التسليم']
@@ -61,7 +63,7 @@ elif choice == "📊 لوحة التحكم":
     revenue = delivered_orders['Paid'].sum()
     pending_money = active_orders['Remaining'].sum()
     
-    # 4. العرض
+    # 5. عرض الداشبورد
     col1, col2 = st.columns(2)
     with col1:
         st.metric(label="إجمالي الطلبات هذا الشهر", value=f"{total_orders} طلب")
