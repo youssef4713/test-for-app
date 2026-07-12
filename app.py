@@ -283,7 +283,7 @@ elif choice == "🔍 بحث علي عميل و تعديل":
                         new_waist_bot = c3.text_input("طول الوسط لأسفل", value=row.get('Waist_to_Bottom', ''))
                         new_hips = c3.text_input("دوران الأرداف", value=row.get('Hips', ''))
                         new_crotch = c3.text_input("الحجر", value=row.get('Crotch', ''))
-                        new_thigh_knee = c3.text_input("طول الفخذ للركبة", value=row.get('Thigh_to_Knee', ''))
+                        new_thigh_knee = c3.text_input("طول الفخذ للركبة", value=row.get('thigh_length_k', ''))
                         
                         # خانة الملاحظات
                         new_notes = st.text_area("ملاحظات", value=row.get('Notes', ''))
@@ -380,7 +380,7 @@ elif choice == "👤 حساب العميل":
             col3.write(f"**طول الوسط لأسفل:** {cust_data.get('Waist_to_Bottom', '---')}")
             col3.write(f"**دوران الأرداف:** {cust_data.get('Hips', '---')}")
             col3.write(f"**الحجر:** {cust_data.get('Crotch', '---')}")
-            col3.write(f"**طول الفخذ للركبة:** {cust_data.get('Thigh_to_Knee', '---')}")
+            col3.write(f"**طول الفخذ للركبة:** {cust_data.get('thigh_length_k', '---')}")
             
             st.write(f"**ملاحظات:** {cust_data.get('Notes', '---')}")
             
