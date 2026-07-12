@@ -78,7 +78,7 @@ def get_data(sheet):
 # القائمة الجانبية
 choice = st.sidebar.radio(
     "🧭 القائمة الرئيسية:", 
-    ["📊 لوحة التحكم", "➕ تسجيل عميلة جديدة", "💰 الحسابات والطلبات", "📦 الطلبات المكتملة", "🔍 بحث علي عميل و تعديل", "👤 حساب العميل"],
+    ["📊 لوحة التحكم", "➕ تسجيل عميلة جديدة", "💰 الحسابات والطلبات", "📦 الطلبات المكتملة", "🔍 بحث علي عميل و تعديل", "👤 حساب العميل", "💰 مديونيات العملاء"],
     key="main_menu"  # <--- ده اللي هيخلينا نتحكم في الاختيار
 )
       
@@ -408,3 +408,35 @@ elif choice == "👤 حساب العميل":
             st.dataframe(cust_history[['Registration_Date', 'Status', 'Total_Price', 'Paid', 'Remaining', 'Dress_Details']], use_container_width=True)
         else:
             st.warning("لا يوجد تاريخ طلبات لهذا العميل.")
+
+#------------مديونيات العملاء--------------
+
+elif choice == "💰 مديونيات العملاء":
+    st.title("💰 مديونيات العملاء")
+    
+    # جلب البيانات (بنستخدم نفس دالة جلب البيانات اللي عندك)
+    df_bookings = get_data(bookings_sheet)
+    
+    # تنظيف البيانات (التأكد إن المتبقي رقم)
+    df_bookings['Remaining'] = pd.to_numeric(df_bookings['Remaining'], errors='coerce').fillna(0)
+    
+    # الفلترة: نجيب بس الناس اللي عليهم فلوس (المتبقي > 0)
+    debtors = df_bookings[df_bookings['Remaining'] > 0]
+    
+    if not debtors.empty:
+        # عرض إجمالي المديونيات فوق الجدول
+        total_debt = debtors['Remaining'].sum()
+        st.metric("إجمالي المديونيات الحالية", f"{total_debt:,.0f} ج.م")
+        
+        # عرض الجدول بشكل احترافي
+        st.subheader("قائمة العملاء المديونين:")
+        
+        # اختيار الأعمدة اللي عايز تظهرها (ممكن تعدلها حسب رغبتك)
+        display_cols = ['Booking_ID', 'Name', 'Delivery_Date', 'Remaining']
+        st.dataframe(
+            debtors[display_cols].sort_values(by='Remaining', ascending=False),
+            use_container_width=True,
+            hide_index=True
+        )
+    else:
+        st.success("عاش يا وحش! مفيش أي مديونيات حالياً، الحسابات متصفرة.")
