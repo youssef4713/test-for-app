@@ -414,29 +414,36 @@ elif choice == "👤 حساب العميل":
 elif choice == "💰 مديونيات العملاء":
     st.title("💰 مديونيات العملاء")
     
-    # جلب البيانات (بنستخدم نفس دالة جلب البيانات اللي عندك)
+    # جلب البيانات
     df_bookings = get_data(bookings_sheet)
     
-    # تنظيف البيانات (التأكد إن المتبقي رقم)
+    # 1. تنظيف البيانات: التأكد إن المتبقي أرقام
     df_bookings['Remaining'] = pd.to_numeric(df_bookings['Remaining'], errors='coerce').fillna(0)
     
-    # الفلترة: نجيب بس الناس اللي عليهم فلوس (المتبقي > 0)
-    debtors = df_bookings[df_bookings['Remaining'] > 0]
+    # 2. تجميع البيانات: نجمع كل المديونيات لنفس الاسم
+    # بنعمل GroupBy للاسم، وبنجمع خانة Remaining
+    debt_summary = df_bookings.groupby('Name')['Remaining'].sum().reset_index()
     
-    if not debtors.empty:
-        # عرض إجمالي المديونيات فوق الجدول
-        total_debt = debtors['Remaining'].sum()
-        st.metric("إجمالي المديونيات الحالية", f"{total_debt:,.0f} ج.م")
+    # 3. الفلترة: نشيل الناس اللي مديونيتهم 0
+    debt_summary = debt_summary[debt_summary['Remaining'] > 0]
+    
+    if not debt_summary.empty:
+        # إجمالي المديونيات في الأتيليه كله
+        total_debt = debt_summary['Remaining'].sum()
+        st.metric("💰 إجمالي المديونيات في الأتيليه", f"{total_debt:,.0f} ج.م")
         
-        # عرض الجدول بشكل احترافي
-        st.subheader("قائمة العملاء المديونين:")
+        st.subheader("إجمالي المديونيات لكل عميل:")
         
-        # اختيار الأعمدة اللي عايز تظهرها (ممكن تعدلها حسب رغبتك)
-        display_cols = ['Booking_ID', 'Name', 'Delivery_Date', 'Remaining']
+        # عرض الجدول
+        # استخدمت use_container_width عشان الجدول يملأ الشاشة ويكون مريح للعين
         st.dataframe(
-            debtors[display_cols].sort_values(by='Remaining', ascending=False),
+            debt_summary.sort_values(by='Remaining', ascending=False),
             use_container_width=True,
-            hide_index=True
+            hide_index=True,
+            column_config={
+                "Name": "اسم العميل",
+                "Remaining": "إجمالي المديونية (ج.م)"
+            }
         )
     else:
-        st.success("عاش يا وحش! مفيش أي مديونيات حالياً، الحسابات متصفرة.")
+        st.success("عاش يا وحش! مفيش أي مديونيات حالياً.")
