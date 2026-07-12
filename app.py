@@ -245,7 +245,11 @@ elif choice == "📦 الطلبات المكتملة":
 # --- 5. بحث ---
 elif choice == "🔍 بحث علي عميل و تعديل":
     st.title("🔍 بحث علي عميل و تعديل")
+    
+    # جلب البيانات
     df_cust = get_data(customers_sheet)
+    
+    # مربع البحث
     search = st.text_input("🔎 ابحث باسم العميل:")
     
     if not df_cust.empty:
@@ -256,49 +260,56 @@ elif choice == "🔍 بحث علي عميل و تعديل":
             
         if not display_df.empty:
             for idx, row in display_df.iterrows():
+                # استخدام الاسم لفتح العميل
                 with st.expander(f"👤 {row['Name']}"):
+                    # إضافة key فريد للفورم بناءً على الـ idx
                     with st.form(f"edit_meas_{idx}"):
                         c1, c2, c3 = st.columns(3)
                         
-                        new_chest = c1.text_input("دوران الصدر", value=str(row.get('Chest', '')))
-                        new_waist = c1.text_input("دوران الوسط", value=str(row.get('Waist', '')))
-                        new_dart = c1.text_input("بنسة الصدر", value=str(row.get('Chest_Dart', '')))
-                        new_thigh = c1.text_input("عرض الفخذ", value=str(row.get('Thigh_Width', '')))
+                        # إضافة key فريد لكل خانة عشان الداتا متلخبطش
+                        new_chest = c1.text_input("دوران الصدر", value=str(row.get('Chest', '')), key=f"chest_{idx}")
+                        new_waist = c1.text_input("دوران الوسط", value=str(row.get('Waist', '')), key=f"waist_{idx}")
+                        new_dart = c1.text_input("بنسة الصدر", value=str(row.get('Chest_Dart', '')), key=f"dart_{idx}")
+                        new_thigh = c1.text_input("عرض الفخذ", value=str(row.get('Thigh_Width', '')), key=f"thigh_{idx}")
                         
-                        new_len = c2.text_input("الطول الكلي", value=str(row.get('Length', '')))
-                        new_sleeve = c2.text_input("عرض الكم", value=str(row.get('Sleeve_Width', '')))
-                        new_neck = c2.text_input("طول الرقبة للوسط", value=str(row.get('Neck_to_Waist', '')))
-                        new_inseam = c2.text_input("الحجر الداخلي", value=str(row.get('Inseam', '')))
+                        new_len = c2.text_input("الطول الكلي", value=str(row.get('Length', '')), key=f"len_{idx}")
+                        new_sleeve = c2.text_input("عرض الكم", value=str(row.get('Sleeve_Width', '')), key=f"sleeve_{idx}")
+                        new_neck = c2.text_input("طول الرقبة للوسط", value=str(row.get('Neck_to_Waist', '')), key=f"neck_{idx}")
+                        new_inseam = c2.text_input("الحجر الداخلي", value=str(row.get('Inseam', '')), key=f"inseam_{idx}")
                         
-                        new_waist_bot = c3.text_input("طول الوسط لأسفل", value=str(row.get('Waist_to_Bottom', '')))
-                        new_hips = c3.text_input("دوران الأرداف", value=str(row.get('Hips', '')))
-                        new_crotch = c3.text_input("الحجر", value=str(row.get('Crotch', '')))
-                        new_thigh_knee = c3.text_input("طول الفخذ للركبة", value=str(row.get('Thigh_to_Knee', '')))
-                        new_notes = st.text_area("ملاحظات", value=str(row.get('Notes', '')))
+                        new_waist_bot = c3.text_input("طول الوسط لأسفل", value=str(row.get('Waist_to_Bottom', '')), key=f"wbot_{idx}")
+                        new_hips = c3.text_input("دوران الأرداف", value=str(row.get('Hips', '')), key=f"hips_{idx}")
+                        new_crotch = c3.text_input("الحجر", value=str(row.get('Crotch', '')), key=f"crotch_{idx}")
+                        new_thigh_knee = c3.text_input("طول الفخذ للركبة", value=str(row.get('Thigh_to_Knee', '')), key=f"thk_{idx}")
                         
-                        # --- هنا الجزء الجديد ---
+                        new_notes = st.text_area("ملاحظات", value=str(row.get('Notes', '')), key=f"notes_{idx}")
+                        
                         if st.form_submit_button("💾 تحديث المقاسات"):
-                            updated_values = [
-                                new_chest, new_waist, new_dart, new_thigh, 
-                                new_len, new_sleeve, new_neck, new_inseam, 
-                                new_waist_bot, new_hips, new_crotch, new_thigh_knee, new_notes
-                            ]
-                            st.write("### ⚠️ راجع البيانات قبل الحفظ:")
-                            st.write(updated_values)
-                            st.session_state['pending_update'] = updated_values
-                            st.session_state['row_name'] = row['Name']
-                        
-                        if 'pending_update' in st.session_state and st.session_state.get('row_name') == row['Name']:
-                            if st.button("✅ تأكيد وحفظ التعديلات نهائياً"):
-                                try:
-                                    cell = customers_sheet.find(st.session_state['row_name'])
-                                    customers_sheet.update(f"D{cell.row}:P{cell.row}", [st.session_state['pending_update']])
-                                    st.success("تم الحفظ بنجاح!")
-                                    del st.session_state['pending_update']
-                                    st.rerun()
-                                except Exception as e:
-                                    st.error(f"خطأ: {e}")
-                                    
+                            try:
+                                # البحث عن رقم السطر الفعلي للعميل
+                                cell = customers_sheet.find(row['Name'])
+                                actual_row_idx = cell.row
+                                
+                                # ترتيب القيم بالظبط (لازم تطابق أعمدة الشيت من D لـ P)
+                                updated_values = [
+                                    new_chest, new_waist, new_dart, new_thigh, 
+                                    new_len, new_sleeve, new_neck, new_inseam, 
+                                    new_waist_bot, new_hips, new_crotch, new_thigh_knee, new_notes
+                                ]
+                                
+                                # تحديث النطاق كامل
+                                customers_sheet.update(f"D{actual_row_idx}:P{actual_row_idx}", [updated_values])
+                                
+                                st.success(f"تم تحديث بيانات {row['Name']} بنجاح!")
+                                st.rerun()
+                                
+                            except Exception as e:
+                                st.error(f"حدث خطأ: {e}")
+        else:
+            st.warning("لا يوجد عملاء بهذا الاسم.")
+    else:
+        st.info("لا توجد بيانات عملاء لعرضها.")
+        
 #------------حساب العميل----------------
 elif choice == "👤 حساب العميل":
     st.title("👤 حساب العميل (سجل كامل)")
