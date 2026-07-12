@@ -102,7 +102,6 @@ elif choice == "➕ تسجيل عميلة جديدة":
 elif choice == "💰 الحسابات والطلبات":
     st.title("💰 الحسابات والطلبات")
     
-    # إضافة طلب جديد
     with st.expander("➕ إضافة طلب جديد"):
         with st.form("add_new_booking"):
             df_cust = get_data(customers_sheet)
@@ -114,24 +113,32 @@ elif choice == "💰 الحسابات والطلبات":
             
             if st.form_submit_button("✅ إضافة الطلب"):
                 remaining = total_price - paid_amount
-                # الترتيب: Name, Date, Status, Details, Total, Paid, Remaining, Status (مكرر للحالة)
+                # هنا بنحفظ التاريخ أوتوماتيكياً
                 bookings_sheet.append_row([new_name, datetime.now().strftime("%Y-%m-%d"), "تحت التنفيذ", details, total_price, paid_amount, remaining, "تحت التنفيذ"])
                 st.success("تم إضافة الطلب بنجاح!")
                 st.rerun()
 
     st.write("---")
-    # عرض وتعديل الطلبات
     df_book = get_data(bookings_sheet)
     if not df_book.empty:
+        # ترتيب الطلبات من الأحدث للأقدم
+        df_book = df_book.sort_index(ascending=False)
+        
         for idx, row in df_book.iterrows():
-            row_idx = idx + 2
+            row_idx = idx + 2 # لأن الـ index بيبدأ من 0 والشيت بيبدأ من 2
+            
+            # استخراج البيانات
+            name_val = row.get('Name', 'بدون اسم')
+            date_val = row.get('Date', 'غير معروف')
+            status_val = row.get('Status', 'تحت التنفيذ')
             paid_val = pd.to_numeric(row.get('Paid', 0), errors='coerce') or 0
             total_val = pd.to_numeric(row.get('Total_Price', 0), errors='coerce') or 0
-            details_val = row.get('Dress_Details', '') # جلب التفاصيل الحالية
-            name_val = row.get('Name', 'بدون اسم')
-            status_val = row.get('Status', 'تحت التنفيذ')
+            details_val = row.get('Dress_Details', '')
             
-            with st.expander(f"👗 طلب: {name_val} | الحالة: {status_val}"):
+            # شكل العرض في الـ Expander (أضفت التاريخ في العنوان)
+            with st.expander(f"👗 {name_val} | 📅 {date_val} | الحالة: {status_val}"):
+                st.write(f"📅 تاريخ التسجيل: **{date_val}**")
+                
                 with st.form(f"edit_{row_idx}"):
                     new_details = st.text_area("تفاصيل الطلب:", value=details_val)
                     new_status = st.selectbox("الحالة:", ["تحت التنفيذ", "جاهز", "تم التسليم"], 
@@ -143,7 +150,7 @@ elif choice == "💰 الحسابات والطلبات":
                         remaining = new_total - new_paid
                         if new_status == "تم التسليم":
                             row_values = row.tolist()
-                            row_values[3] = new_details # تحديث التفاصيل في الأرشيف
+                            row_values[3] = new_details # ملاحظة: تأكد من ترتيب الأعمدة في الشيت
                             row_values[4] = new_total
                             row_values[5] = new_paid
                             row_values[7] = new_status
@@ -161,7 +168,7 @@ elif choice == "💰 الحسابات والطلبات":
                             st.rerun()
     else:
         st.info("لا توجد طلبات لعرضها.")
-
+        
 # --- 4. الطلبات المكتملة ---
 elif choice == "📦 الطلبات المكتملة":
     st.title("📦 أرشيف الطلبات المكتملة")
