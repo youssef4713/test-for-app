@@ -16,25 +16,32 @@ st.set_page_config(page_title="Lobna's System", page_icon="👗", layout="wide")
 
 # 2. دالة كلمة السر
 def check_password():
-    # نتأكد إذا كان المستخدم دخل الباسورد صح قبل كدة ولا لأ
     if "password_correct" not in st.session_state:
         st.session_state["password_correct"] = False
-
-    # لو هو دخل الباسورد صح فعلاً، نرجع True ونكمل البرنامج
     if st.session_state["password_correct"]:
         return True
-
-    # لو لسه مدخلش، نظهر له خانة الباسورد
-    input_password = st.text_input("🔐 يرجى إدخال كلمة المرور لدخول النظام:", type="password")
     
+    input_password = st.text_input("🔐 يرجى إدخال كلمة المرور لدخول النظام:", type="password")
     if input_password == "4713":
         st.session_state["password_correct"] = True
-        st.rerun() # بنعمل ريفريش عشان يخفي الخانة ويظهر البرنامج
+        st.rerun()
     elif input_password != "":
         st.error("❌ كلمة المرور غير صحيحة!")
-        
     return False
 
+# 2. بوابة الدخول (كل حاجة بعد كدة لازم تكون جوه الـ if دي)
+if check_password():
+    
+    # 3. تعريف الـ choice (جوه الـ if)
+    if "main_menu" not in st.session_state:
+        st.session_state["main_menu"] = "📊 لوحة التحكم"
+        
+    choice = st.sidebar.radio(
+        "🧭 القائمة الرئيسية:", 
+        ["📊 لوحة التحكم", "➕ تسجيل عميلة جديدة", "💰 الحسابات والطلبات", "📦 الطلبات المكتملة", "🔍 بحث علي عميل و تعديل", "👤 حساب العميل", "💰 مديونيات العملاء", "📅 التسليمات"],
+        key="main_menu" 
+    )
+    
 # الاتصال بجوجل شيتس
 @st.cache_resource
 def get_all_sheets():
