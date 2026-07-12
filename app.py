@@ -120,7 +120,7 @@ if choice == "📊 لوحة التحكم":
         st.metric("عدد الطلبات الحالية", len(df_active))
         st.metric("عدد الطلبات المكتملة", len(df_archive))
     with col2:
-        st.metric("💰 إجمالي الأرباح المحصلة", f"{total_revenue:,.0f} ج.م")
+        st.metric("💰 إجمالي الايرادات", f"{total_revenue:,.0f} ج.م")
         st.metric("⏳ مبالغ منتظر تحصيلها", f"{pending_money:,.0f} ج.م")
         
 # --- 2. تسجيل عميلة جديدة ---
