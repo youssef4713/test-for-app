@@ -117,10 +117,8 @@ elif choice == "💰 الحسابات والطلبات":
                 if new_name is None:
                     st.error("⚠️ من فضلك اختر اسم العميل أولاً!")
                 else:
-                    # إنشاء ID بسيط وفريد (ممكن تستخدم time.time() لو عايز)
                     booking_id = int(datetime.now().timestamp()) 
                     remaining = total_price - paid_amount
-                    
                     bookings_sheet.append_row([
                         booking_id, new_name, datetime.now().strftime("%Y-%m-%d"), 
                         delivery_date.strftime("%Y-%m-%d"), "تحت التنفيذ", details, 
@@ -133,34 +131,36 @@ elif choice == "💰 الحسابات والطلبات":
     
     df_book = get_data(bookings_sheet)
     if not df_book.empty:
-        # ترتيب حسب أقرب ميعاد تسليم
+        # ترتيب حسب أقرب ميعاد تسليم (تصاعدي)
         df_book['Delivery_Date'] = pd.to_datetime(df_book['Delivery_Date'], errors='coerce')
         df_book = df_book.sort_values(by='Delivery_Date', ascending=True)
         
-        for _, row in df_book.iterrows():
+        for idx, row in df_book.iterrows():
             b_id = str(row.get('Booking_ID', ''))
             name_val = row.get('Name', 'بدون اسم')
+            # تنسيق التاريخ للعرض
             deliv_date = row.get('Delivery_Date').strftime('%Y-%m-%d') if pd.notnull(row.get('Delivery_Date')) else '-'
             status_val = row.get('Status', 'تحت التنفيذ')
             
             with st.expander(f"👗 {name_val} | ⏳ تسليم: {deliv_date} | الحالة: {status_val}"):
-                with st.form(f"edit_{b_id}"):
+                # استخدام key فريد بيجمع الـ ID ورقم الصف عشان ميطلعش إيرور
+                with st.form(key=f"edit_{b_id}_{idx}"):
                     new_details = st.text_area("تفاصيل الطلب:", value=row.get('Dress_Details', ''))
                     new_deliv_date = st.date_input("تعديل التاريخ:", value=pd.to_datetime(deliv_date))
                     new_status = st.selectbox("الحالة:", ["تحت التنفيذ", "جاهز", "تم التسليم"], 
                                              index=["تحت التنفيذ", "جاهز", "تم التسليم"].index(status_val) if status_val in ["تحت التنفيذ", "جاهز", "تم التسليم"] else 0)
                     
                     if st.form_submit_button("💾 تحديث"):
-                        # البحث عن رقم الصف باستخدام الـ ID
                         cell = bookings_sheet.find(b_id)
                         row_idx = cell.row
                         
                         if new_status == "تم التسليم":
-                            # النقل للأرشيف بنفس الترتيب (بدون الـ ID لو حابب أو بيه)
+                            # نقل للأرشيف
                             completed_sheet.append_row(row.tolist())
                             bookings_sheet.delete_rows(row_idx)
-                            st.success("تم التسليم والترحيل!")
+                            st.success("تم التسليم والترحيل للأرشيف!")
                         else:
+                            # تحديث البيانات (الترتيب: Name=2, Reg=3, Deliv=4, Status=5, Details=6, Total=7, Paid=8, Rem=9)
                             bookings_sheet.update_cell(row_idx, 4, new_deliv_date.strftime("%Y-%m-%d"))
                             bookings_sheet.update_cell(row_idx, 5, new_status)
                             bookings_sheet.update_cell(row_idx, 6, new_details)
