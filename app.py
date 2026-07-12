@@ -80,7 +80,7 @@ if choice == "📊 لوحة التحكم":
 def get_data(sheet):
     raw_data = sheet.get_all_values()
 
-if choice == "➕ تسجيل عميلة جديدة":
+elif choice == "➕ تسجيل عميلة جديدة":
     st.title("➕ تسجيل عميلة جديدة")
     with st.form("new_customer", clear_on_submit=True):
         st.subheader("👤 البيانات الأساسية")
