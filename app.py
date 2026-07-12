@@ -11,37 +11,6 @@ def get_cached_sheet(sheet_name):
     # افترضنا إنك مسمي الـ client بتاعك 'client' في الكود، لو مسميه حاجة تانية غير الاسم هنا
     return client.open("اسم_ملف_جوجل_شيت_بتاعك").worksheet(sheet_name)
 
-# إعدادات الواجهة
-st.set_page_config(page_title="Lobna's System", page_icon="👗", layout="wide")
-
-# 2. دالة كلمة السر
-def check_password():
-    if "password_correct" not in st.session_state:
-        st.session_state["password_correct"] = False
-    if st.session_state["password_correct"]:
-        return True
-    
-    input_password = st.text_input("🔐 يرجى إدخال كلمة المرور لدخول النظام:", type="password")
-    if input_password == "4713":
-        st.session_state["password_correct"] = True
-        st.rerun()
-    elif input_password != "":
-        st.error("❌ كلمة المرور غير صحيحة!")
-    return False
-
-# 2. بوابة الدخول (كل حاجة بعد كدة لازم تكون جوه الـ if دي)
-if check_password():
-    
-    # 3. تعريف الـ choice (جوه الـ if)
-    if "main_menu" not in st.session_state:
-        st.session_state["main_menu"] = "📊 لوحة التحكم"
-        
-    choice = st.sidebar.radio(
-        "🧭 القائمة الرئيسية:", 
-        ["📊 لوحة التحكم", "➕ تسجيل عميلة جديدة", "💰 الحسابات والطلبات", "📦 الطلبات المكتملة", "🔍 بحث علي عميل و تعديل", "👤 حساب العميل", "💰 مديونيات العملاء", "📅 التسليمات"],
-        key="main_menu" 
-    )
-    
 # الاتصال بجوجل شيتس
 @st.cache_resource
 def get_all_sheets():
@@ -103,7 +72,39 @@ def get_data(sheet):
         return df
     return pd.DataFrame()
 
-      
+#---------تسجيل الدخول---------
+
+# إعدادات الواجهة
+st.set_page_config(page_title="Lobna's System", page_icon="👗", layout="wide")
+
+# 2. دالة كلمة السر
+def check_password():
+    if "password_correct" not in st.session_state:
+        st.session_state["password_correct"] = False
+    if st.session_state["password_correct"]:
+        return True
+    
+    input_password = st.text_input("🔐 يرجى إدخال كلمة المرور لدخول النظام:", type="password")
+    if input_password == "4713":
+        st.session_state["password_correct"] = True
+        st.rerun()
+    elif input_password != "":
+        st.error("❌ كلمة المرور غير صحيحة!")
+    return False
+
+# 2. بوابة الدخول (كل حاجة بعد كدة لازم تكون جوه الـ if دي)
+if check_password():
+    
+    # 3. تعريف الـ choice (جوه الـ if)
+    if "main_menu" not in st.session_state:
+        st.session_state["main_menu"] = "📊 لوحة التحكم"
+        
+    choice = st.sidebar.radio(
+        "🧭 القائمة الرئيسية:", 
+        ["📊 لوحة التحكم", "➕ تسجيل عميلة جديدة", "💰 الحسابات والطلبات", "📦 الطلبات المكتملة", "🔍 بحث علي عميل و تعديل", "👤 حساب العميل", "💰 مديونيات العملاء", "📅 التسليمات"],
+        key="main_menu" 
+    )
+
 # --- 1. لوحة التحكم (KPIs) ---
 if choice == "📊 لوحة التحكم":
     st.title("📊 لوحة التحكم - الأتيليه")
