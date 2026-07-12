@@ -459,7 +459,6 @@ elif choice == "📅 تواريخ التسليم":
     
     # جلب البيانات
     df_orders = get_data(bookings_sheet) # تأكد إن ده اسم شيت الطلبات عندك
-     st.write(df_orders.columns)
 
     if not df_orders.empty:
         # 1. فلترة الطلبات التي لم يتم تسليمها (افترضنا إن اللي مش "تم التسليم" لسه شغال)
@@ -481,7 +480,7 @@ elif choice == "📅 تواريخ التسليم":
                 
                 with st.expander(f"📦 {row['Name']} - موعد التسليم: {delivery_date}"):
                     st.write(f"**اسم العميل:** {row['Name']}")
-                    st.write(f"**نوع الطلب:** {row['Order_Type']}")
+                    st.write(f"**حالة الطلب:** {row['Status']}")
                     st.write(f"**المبلغ المتبقي:** {row['Remaining_Amount']} ج.م")
                     st.write(f"**ملاحظات:** {row['Notes']}")
                     # هنا تقدر تضيف زرار "تم التسليم" لو تحب
