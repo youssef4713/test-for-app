@@ -309,3 +309,61 @@ elif choice == "🔍 بحث علي عميل و تعديل":
             st.warning("لا يوجد عملاء بهذا الاسم.")
     else:
         st.info("لا توجد بيانات عملاء لعرضها.")
+
+
+elif choice == "👤 حساب العميل":
+    st.title("👤 حساب العميل (سجل كامل)")
+    
+    # جلب الداتا
+    df_cust = get_data(customers_sheet)
+    df_book = get_data(bookings_sheet)
+    df_comp = get_data(completed_sheet) # تأكد إن عندك دالة لجلب البيانات من شيت المكتملة
+    
+    # دمج الطلبات (الجارية + المكتملة) عشان نجيب التاريخ كامل
+    # لازم نضمن إن أسماء الأعمدة موحدة في الشيتين
+    all_orders = pd.concat([df_book, df_comp], ignore_index=True)
+    
+    cust_names = df_cust['Name'].unique().tolist()
+    selected_name = st.selectbox("🔍 اختر العميل لعرض ملفه:", cust_names)
+    
+    if selected_name:
+        # بيانات العميل
+        cust_data = df_cust[df_cust['Name'] == selected_name].iloc[0]
+        # طلبات العميل
+        cust_history = all_orders[all_orders['Name'] == selected_name]
+        
+        # --- الجزء الأول: الإحصائيات المالية ---
+        st.subheader(f"📊 نظرة عامة: {selected_name}")
+        c1, c2, c3 = st.columns(3)
+        
+        total_spent = cust_history['Paid'].sum() if not cust_history.empty else 0
+        total_orders = len(cust_history)
+        remaining_balance = cust_history['Remaining'].sum() if not cust_history.empty else 0
+        
+        c1.metric("💰 إجمالي ما تم دفعه", f"{total_spent} ج.م")
+        c2.metric("👗 عدد القطع (الطلبات)", total_orders)
+        c3.metric("⏳ المتبقي عليه حالياً", f"{remaining_balance} ج.م")
+        
+        # --- الجزء الثاني: المقاسات ---
+        with st.expander("📏 مقاسات العميل الحالية"):
+            # عرض المقاسات بشكل منظم
+            col1, col2, col3 = st.columns(3)
+            col1.write(f"**الصدر:** {cust_data.get('Chest', '---')}")
+            col1.write(f"**الوسط:** {cust_data.get('Waist', '---')}")
+            col1.write(f"**بنسة الصدر:** {cust_data.get('Chest_Dart', '---')}")
+            
+            col2.write(f"**الطول الكلي:** {cust_data.get('Length', '---')}")
+            col2.write(f"**عرض الكم:** {cust_data.get('Sleeve_Width', '---')}")
+            col2.write(f"**طول الرقبة:** {cust_data.get('Neck_to_Waist', '---')}")
+            
+            col3.write(f"**دوران الأرداف:** {cust_data.get('Hips', '---')}")
+            col3.write(f"**الحجر:** {cust_data.get('Crotch', '---')}")
+            col3.write(f"**ملاحظات:** {cust_data.get('Notes', '---')}")
+            
+        # --- الجزء الثالث: تاريخ التعاملات ---
+        st.subheader("📜 تاريخ الطلبات")
+        if not cust_history.empty:
+            # ترتيب الجدول بالأحدث
+            st.dataframe(cust_history[['Registration_Date', 'Status', 'Total_Price', 'Paid', 'Remaining', 'Dress_Details']], use_container_width=True)
+        else:
+            st.warning("لا يوجد تاريخ طلبات لهذا العميل.")
