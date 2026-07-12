@@ -30,6 +30,10 @@ choice = st.sidebar.selectbox("🧭 القائمة الرئيسية:",
                               ["📊 لوحة التحكم", "➕ تسجيل عميلة جديدة", "💰 الحسابات والطلبات", "📦 الطلبات المكتملة", "🔍 بحث علي عميل و تعديل"])
 
 # --- 1. لوحة التحكم (KPIs) ---
+@st.cache_data(ttl=600) 
+def get_data(sheet):
+    raw_data = sheet.get_all_values()
+
 if choice == "📊 لوحة التحكم":
     st.title("📊 لوحة التحكم - الأتيليه")
     
@@ -72,6 +76,10 @@ if choice == "📊 لوحة التحكم":
     st.info("💡 يتم حساب الأرباح من عمود 'المدفوع' (Paid) في كل الطلبات.")
 
 # --- 2. تسجيل عميلة جديدة ---
+@st.cache_data(ttl=600) 
+def get_data(sheet):
+    raw_data = sheet.get_all_values()
+
 elif choice == "➕ تسجيل عميلة جديدة":
     st.title("➕ تسجيل عميلة جديدة")
     with st.form("new_customer", clear_on_submit=True):
@@ -102,6 +110,9 @@ elif choice == "➕ تسجيل عميلة جديدة":
 
 
 # --- 3. الحسابات والطلبات (مع ميزة تعديل الفلوس وأوتوماتيك التسليم) ---
+@st.cache_data(ttl=600) 
+def get_data(sheet):
+    raw_data = sheet.get_all_values()
 
 elif choice == "💰 الحسابات والطلبات":
     st.title("💰 الحسابات والطلبات")
@@ -180,6 +191,10 @@ elif choice == "💰 الحسابات والطلبات":
         st.dataframe(df_book[['Name', 'Status', 'Total_Price', 'Paid', 'Remaining']], use_container_width=True)
 
 # --- 4. الطلبات المكتملة ---
+@st.cache_data(ttl=600) 
+def get_data(sheet):
+    raw_data = sheet.get_all_values()
+
 elif choice == "📦 الطلبات المكتملة":
     st.title("📦 أرشيف الطلبات المكتملة")
     df_comp = get_data(completed_sheet)
