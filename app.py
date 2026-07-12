@@ -112,6 +112,9 @@ elif choice == "➕ تسجيل عميلة جديدة":
             customers_sheet.append_row(["QS-NEW", name, phone, chest, waist, hips, length, neck_to_waist, waist_to_bottom, crotch, inseam, thigh_width, thigh_length_k, chest_dart, sleeve_width, notes, datetime.now().strftime("%Y-%m-%d")])
             st.success(f"تم حفظ بيانات {name} بنجاح!")
 
+# --- 2. الحسابات ---
+
+
 elif choice == "💰 الحسابات والطلبات":
     st.title("💰 الحسابات والطلبات")
     
