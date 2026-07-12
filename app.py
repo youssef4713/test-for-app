@@ -134,18 +134,18 @@ elif choice == "➕ تسجيل عميلة جديدة":
         
         st.subheader("📐 المقاسات")
         c1, c2, c3 = st.columns(3)
-        chest = c1.number_input("دوران الصدر")'step=0.5'
-        waist = c1.number_input("دوران الوسط"),'step=0.5'
-        chest_dart = c1.number_input("بنسة الصدر"),'step=0.5'
-        length = c2.number_input("الطول الكلي")'step=0.5'
-        sleeve_width = c2.number_input("عرض الكم")'step=0.5'
-        neck_to_waist = c2.number_input("طول الرقبة للوسط")'step=0.5'
-        waist_to_bottom = c3.number_input("طول الوسط لأسفل")'step=0.5'
-        hips = c3.number_input("دوران الأرداف")'step=0.5'
-        crotch = c3.number_input("الحجر")'step=0.5'
-        inseam = c3.number_input("الحجر الداخلي")'step=0.5'
-        thigh_width = c3.number_input("عرض الفخذ")'step=0.5'
-        thigh_length_k = c3.number_input("طول الفخذ للركبة")'step=0.5'
+        chest = c1.number_input("دوران الصدر", min_value=0.0, step=0.5, format="%f")
+        waist = c1.number_input("دوران الوسط", min_value=0.0, step=0.5, format="%f")
+        chest_dart = c1.number_input("بنسة الصدر", min_value=0.0, step=0.5, format="%f")
+        length = c2.number_input("الطول الكلي", min_value=0.0, step=0.5, format="%f")
+        sleeve_width = c2.number_input("عرض الكم", min_value=0.0, step=0.5, format="%f")
+        neck_to_waist = c2.number_input("طول الرقبة للوسط", min_value=0.0, step=0.5, format="%f")
+        waist_to_bottom = c3.number_input("طول الوسط لأسفل", min_value=0.0, step=0.5, format="%f")
+        hips = c3.number_input("دوران الأرداف", min_value=0.0, step=0.5, format="%f")
+        crotch = c3.number_input("الحجر", min_value=0.0, step=0.5, format="%f")
+        inseam = c3.number_input("الحجر الداخلي", min_value=0.0, step=0.5, format="%f")
+        thigh_width = c3.number_input("عرض الفخذ", min_value=0.0, step=0.5, format="%f")
+        thigh_length_k = c3.number_input("طول الفخذ للركبة", min_value=0.0, step=0.5, format="%f")
         notes = st.text_area("ملاحظات")
         
         if st.form_submit_button("💾 حفظ بيانات العميل"):
