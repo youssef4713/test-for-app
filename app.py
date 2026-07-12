@@ -208,7 +208,7 @@ elif choice == "💰 الحسابات والطلبات":
                     current_status_idx = status_options.index(row['Status']) if row['Status'] in status_options else 0
                     
                     new_status = c1.selectbox("الحالة:", status_options, index=current_status_idx)
-                    new_total = c2.number_input("السعر الكلي:", value=float(row['Total_Price'], disabled=True)
+                    new_total = c2.number_input("السعر الكلي:", value=float(row['Total_Price']), disabled=True)
                     
                     # --- الجزء الجديد: عرض وتعديل تفاصيل الطلب ---
                     new_details = st.text_area("تفاصيل الطلب:", value=row['Dress_Details'])
