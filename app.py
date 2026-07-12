@@ -76,11 +76,13 @@ if choice == "📊 لوحة التحكم":
     st.info("💡 يتم حساب الأرباح من عمود 'المدفوع' (Paid) في كل الطلبات.")
 
 # --- 2. تسجيل عميلة جديدة ---
-@st.cache_data(ttl=600) 
+@st.cache_data(ttl=600)
 def get_data(sheet):
     raw_data = sheet.get_all_values()
-    #
-
+    if not raw_data:
+        return pd.DataFrame()
+    return pd.DataFrame(raw_data[1:], columns=raw_data[0])
+    
 elif choice == "➕ تسجيل عميلة جديدة":
     st.title("➕ تسجيل عميلة جديدة")
     with st.form("new_customer", clear_on_submit=True):
