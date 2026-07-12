@@ -30,46 +30,116 @@ choice = st.sidebar.selectbox("🧭 القائمة الرئيسية:",
                               ["📊 لوحة التحكم", "➕ تسجيل عميلة جديدة", "💰 الحسابات والطلبات", "📦 الطلبات المكتملة", "🔍 بحث علي عميل و تعديل"])
 
 # --- 1. لوحة التحكم ---
+# تأكد إن اختيار الصفحة بيبدأ بـ if وبعدين الـ elifات
 if choice == "📊 لوحة التحكم":
-    st.title("📊 لوحة تحكم الأتيليه")
-    df_book = get_data(bookings_sheet)
-    st.write(df_book.columns) # السطر ده هيظهرلك أسماء الأعمدة الحقيقية اللي البرنامج شايفها
+    st.title("📊 لوحة التحكم - الأتيليه")
     
-    if not df_book.empty and 'Date' in df_book.columns:
-        df_book['Date'] = pd.to_datetime(df_book['Date'], errors='coerce')
-        df_book['Paid'] = pd.to_numeric(df_book['Paid'], errors='coerce').fillna(0)
-        df_book['Remaining'] = pd.to_numeric(df_book['Remaining'], errors='coerce').fillna(0)
-        
-        total_paid = df_book['Paid'].sum()
-        total_remaining = df_book['Remaining'].sum()
-        total_count = len(df_book)
-        
-        thirty_days_ago = datetime.now() - pd.Timedelta(days=30)
-        df_filtered = df_book[df_book['Date'] >= thirty_days_ago]
-        
-        recent_paid = df_filtered['Paid'].sum()
-        recent_count = len(df_filtered)
-        
-        st.subheader("📈 الإجمالي الكلي (منذ البداية)")
-        c1, c2, c3 = st.columns(3)
-        c1.metric("إجمالي التحصيل الكلي", f"{total_paid:,.0f} ج.م")
-        c2.metric("إجمالي المتبقي الكلي", f"{total_remaining:,.0f} ج.م")
-        c3.metric("عدد الطلبات الكلي", total_count)
-        
-        st.write("---")
-        st.subheader("🗓️ أداء آخر 30 يوم")
-        c4, c5 = st.columns(2)
-        c4.metric("تحصيل آخر 30 يوم", f"{recent_paid:,.0f} ج.م")
-        c5.metric("عدد الطلبات في 30 يوم", recent_count)
-        
-        if not df_filtered.empty:
-            st.write("📋 الطلبات الأخيرة:")
-            st.dataframe(df_filtered[['Name', 'Status', 'Paid', 'Date']])
-        else:
-            st.info("لا توجد طلبات جديدة في آخر 30 يوم.")
-    else:
-        st.warning("تأكد من وجود البيانات في الشيت وتسمية عمود التاريخ بـ 'Date'.")
+    # 1. جلب وتجهيز البيانات
+    df_active = get_data(bookings_sheet)
+    df_archive = get_data(completed_sheet)
+    
+    cols = ['Booking_ID', 'Name', 'Registration_Date', 'Delivery_Date', 'Status', 'Dress_Details', 'Total_Price', 'Paid', 'Remaining']
+    
+    if not df_active.empty: df_active.columns = cols
+    if not df_archive.empty: df_archive.columns = cols
+    
+    df_all = pd.concat([df_active, df_archive], ignore_index=True)
+    
+    # 2. حسابات الشهر الحالي (يوليو 2026)
+    df_all['Registration_Date'] = pd.to_datetime(df_all['Registration_Date'], errors='coerce')
+    df_month = df_all[(df_all['Registration_Date'].dt.month == 7) & (df_all['Registration_Date'].dt.year == 2026)]
+    
+    # 3. استخراج الأرقام
+    total_orders = len(df_month)
+    delivered_orders = df_month[df_month['Status'] == 'تم التسليم']
+    active_orders = df_month[df_month['Status'] != 'تم التسليم']
+    
+    revenue = delivered_orders['Paid'].sum()
+    pending_money = active_orders['Remaining'].sum()
+    
+    # 4. العرض
+    col1, col2 = st.columns(2)
+    with col1:
+        st.metric(label="إجمالي الطلبات هذا الشهر", value=f"{total_orders} طلب")
+        st.metric(label="فستان تم تسليمه", value=f"{len(delivered_orders)}")
+    with col2:
+        st.metric(label="الأرباح المحصلة", value=f"{revenue} ج.م")
+        st.metric(label="مبالغ منتظر تحصيلها", value=f"{pending_money} ج.م")
+    
+    st.write("---")
+    st.info("💡 تم حساب البيانات بناءً على طلبات شهر يوليو 2026")
 
+elif choice == "💰 الحسابات والطلبات":
+    st.title("💰 الحسابات والطلبات")
+    
+    with st.expander("➕ إضافة طلب جديد"):
+        with st.form("add_new_booking"):
+            df_cust = get_data(customers_sheet)
+            cust_names = df_cust['Name'].tolist() if not df_cust.empty else []
+            new_name = st.selectbox("اختر اسم العميل:", cust_names, index=None, placeholder="اختر العميل...")
+            
+            delivery_date = st.date_input("📅 تاريخ التسليم المتوقع:")
+            details = st.text_area("تفاصيل الطلب:")
+            total_price = st.number_input("السعر الكلي:", min_value=0)
+            paid_amount = st.number_input("المبلغ المدفوع:", min_value=0)
+            
+            if st.form_submit_button("✅ إضافة الطلب"):
+                if new_name is None:
+                    st.error("⚠️ من فضلك اختر اسم العميل أولاً!")
+                else:
+                    booking_id = int(datetime.now().timestamp()) 
+                    remaining = total_price - paid_amount
+                    bookings_sheet.append_row([
+                        str(booking_id), new_name, datetime.now().strftime("%Y-%m-%d"), 
+                        delivery_date.strftime("%Y-%m-%d"), "تحت التنفيذ", details, 
+                        float(total_price), float(paid_amount), float(remaining)
+                    ])
+                    st.success("تم إضافة الطلب!")
+                    st.rerun()
+
+    st.write("---")
+    
+    df_book = get_data(bookings_sheet)
+    if not df_book.empty:
+        df_book.columns = ['Booking_ID', 'Name', 'Registration_Date', 'Delivery_Date', 'Status', 'Dress_Details', 'Total_Price', 'Paid', 'Remaining']
+        
+        # ترتيب حسب أقرب ميعاد تسليم
+        df_book['Delivery_Date'] = pd.to_datetime(df_book['Delivery_Date'], errors='coerce')
+        df_book = df_book.sort_values(by='Delivery_Date', ascending=True)
+        
+        for idx, row in df_book.iterrows():
+            b_id = str(row.get('Booking_ID', ''))
+            name_val = row.get('Name', 'بدون اسم')
+            deliv_date = row.get('Delivery_Date').strftime('%Y-%m-%d') if pd.notnull(row.get('Delivery_Date')) else '-'
+            status_val = row.get('Status', 'تحت التنفيذ')
+            
+            with st.expander(f"👗 {name_val} | ⏳ تسليم: {deliv_date} | الحالة: {status_val}"):
+                with st.form(key=f"edit_{b_id}_{idx}"):
+                    new_details = st.text_area("تفاصيل الطلب:", value=row.get('Dress_Details', ''))
+                    new_deliv_date = st.date_input("تعديل التاريخ:", value=pd.to_datetime(deliv_date))
+                    new_status = st.selectbox("الحالة:", ["تحت التنفيذ", "جاهز", "تم التسليم"], 
+                                             index=["تحت التنفيذ", "جاهز", "تم التسليم"].index(status_val) if status_val in ["تحت التنفيذ", "جاهز", "تم التسليم"] else 0)
+                    
+                    if st.form_submit_button("💾 تحديث"):
+                        cell = bookings_sheet.find(b_id)
+                        row_idx = cell.row
+                        
+                        if new_status == "تم التسليم":
+                            archive_row = [
+                                str(row['Booking_ID']), str(row['Name']), str(row['Registration_Date']),
+                                new_deliv_date.strftime("%Y-%m-%d"), "تم التسليم", str(new_details),
+                                float(row['Total_Price']), float(row['Paid']), float(row['Remaining'])
+                            ]
+                            completed_sheet.append_row(archive_row)
+                            bookings_sheet.delete_rows(row_idx)
+                            st.success("تم التسليم والترحيل للأرشيف!")
+                        else:
+                            bookings_sheet.update_cell(row_idx, 4, new_deliv_date.strftime("%Y-%m-%d"))
+                            bookings_sheet.update_cell(row_idx, 5, new_status)
+                            bookings_sheet.update_cell(row_idx, 6, new_details)
+                            st.success("تم التحديث!")
+                        st.rerun()
+                        
 # --- 2. تسجيل عميلة جديدة ---
 elif choice == "➕ تسجيل عميلة جديدة":
     st.title("➕ تسجيل عميلة جديدة")
