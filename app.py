@@ -451,7 +451,7 @@ elif choice == "💰 مديونيات العملاء":
                     
                     # عرض تفاصيل الطلب (قراءة فقط)
                     details_text = row.get('Dress_Details', 'لا توجد تفاصيل إضافية')
-                    st.write(f"**الطلب:** {row.get('Order_Type', 'غير محدد')}")
+                    st.write(f"**الطلب:** {row.get('Status', 'غير محدد')}")
                     st.text_area("تفاصيل الطلب:", value=details_text, disabled=True, key=f"det_{idx}")
                     
                     with st.form(f"update_{idx}"):
