@@ -421,12 +421,13 @@ elif choice == "💰 مديونيات العملاء":
     # جلب البيانات
     df_bookings = get_data(bookings_sheet)
     
-    # 1. تنظيف البيانات: التأكد إن المتبقي أرقام
+    # 1. تنظيف البيانات: تحويل الأعمدة لأرقام
+    df_bookings['Total_Amount'] = pd.to_numeric(df_bookings['Total_Amount'], errors='coerce').fillna(0)
+    df_bookings['Paid_Amount'] = pd.to_numeric(df_bookings['Paid_Amount'], errors='coerce').fillna(0)
     df_bookings['Remaining'] = pd.to_numeric(df_bookings['Remaining'], errors='coerce').fillna(0)
     
-    # 2. تجميع البيانات: نجمع كل المديونيات لنفس الاسم
-    # بنعمل GroupBy للاسم، وبنجمع خانة Remaining
-    debt_summary = df_bookings.groupby('Name')['Remaining'].sum().reset_index()
+    # 2. تجميع البيانات: نجمع كل المديونيات + إجمالي الحساب + المدفوع لنفس الاسم
+    debt_summary = df_bookings.groupby('Name')[['Total_Amount', 'Paid_Amount', 'Remaining']].sum().reset_index()
     
     # 3. الفلترة: نشيل الناس اللي مديونيتهم 0
     debt_summary = debt_summary[debt_summary['Remaining'] > 0]
@@ -436,21 +437,22 @@ elif choice == "💰 مديونيات العملاء":
         total_debt = debt_summary['Remaining'].sum()
         st.metric("💰 إجمالي المديونيات في الأتيليه", f"{total_debt:,.0f} ج.م")
         
-        st.subheader("إجمالي المديونيات لكل عميل:")
+        st.subheader("تفاصيل المديونيات لكل عميل:")
         
-        # عرض الجدول
-        # استخدمت use_container_width عشان الجدول يملأ الشاشة ويكون مريح للعين
+        # عرض الجدول مع إظهار الإجمالي والمدفوع بجانب المديونية
         st.dataframe(
             debt_summary.sort_values(by='Remaining', ascending=False),
             use_container_width=True,
             hide_index=True,
             column_config={
                 "Name": "اسم العميل",
+                "Total_Amount": "إجمالي الحساب (ج.م)",
+                "Paid_Amount": "إجمالي المدفوع (ج.م)",
                 "Remaining": "إجمالي المديونية (ج.م)"
             }
         )
     else:
-        st.success("عاش يا وحش! مفيش أي مديونيات حالياً.")
+        st.success("مفيش أي مديونيات حالياً.")
 
 #--------------تواريخ التسليم----------------
 
