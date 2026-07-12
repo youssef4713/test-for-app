@@ -29,45 +29,46 @@ def get_data(sheet):
 choice = st.sidebar.selectbox("🧭 القائمة الرئيسية:", 
                               ["📊 لوحة التحكم", "➕ تسجيل عميلة جديدة", "💰 الحسابات والطلبات", "📦 الطلبات المكتملة", "🔍 بحث علي عميل و تعديل"])
 
-elif choice == "📊 لوحة التحكم":
-    st.title("📊 لوحة التحكم - الأتيليه")
+# --- 1. لوحة التحكم ---
+if choice == "📊 لوحة التحكم":
+    st.title("📊 لوحة تحكم الأتيليه")
+    df_book = get_data(bookings_sheet)
+    st.write(df_book.columns) # السطر ده هيظهرلك أسماء الأعمدة الحقيقية اللي البرنامج شايفها
     
-    # 1. دمج البيانات من الشيتين عشان الحسابات تبقى دقيقة
-    df_active = get_data(bookings_sheet)
-    df_archive = get_data(completed_sheet)
-    
-    # تأكد من توحيد الأعمدة قبل الدمج
-    cols = ['Booking_ID', 'Name', 'Registration_Date', 'Delivery_Date', 'Status', 'Dress_Details', 'Total_Price', 'Paid', 'Remaining']
-    if not df_active.empty: df_active.columns = cols
-    if not df_archive.empty: df_archive.columns = cols
-    
-    df_all = pd.concat([df_active, df_archive], ignore_index=True)
-    
-    # 2. تحويل التواريخ وتصفية بيانات الشهر الحالي (يوليو 2026)
-    df_all['Registration_Date'] = pd.to_datetime(df_all['Registration_Date'], errors='coerce')
-    current_month = datetime.now().month
-    current_year = datetime.now().year
-    df_month = df_all[(df_all['Registration_Date'].dt.month == current_month) & (df_all['Registration_Date'].dt.year == current_year)]
-    
-    # 3. حساب الأرقام (KPIs)
-    total_orders = len(df_month)
-    delivered_orders = df_month[df_month['Status'] == 'تم التسليم']
-    active_orders = df_month[df_month['Status'] != 'تم التسليم']
-    
-    revenue = delivered_orders['Paid'].sum() # إجمالي ما تم تحصيله من المسلم
-    pending_money = active_orders['Remaining'].sum() # المتبقي تحصيله
-    
-    # 4. العرض في الداشبورد
-    col1, col2 = st.columns(2)
-    with col1:
-        st.metric(label="إجمالي الطلبات هذا الشهر", value=f"{total_orders} طلب")
-        st.metric(label="تم تسليم", value=f"{len(delivered_orders)} فستان")
-    with col2:
-        st.metric(label="أرباح محصلة (المسلم)", value=f"{revenue} ج.م")
-        st.metric(label="مبالغ منتظر تحصيلها", value=f"{pending_money} ج.م", delta_color="inverse")
-    
-    st.write("---")
-    st.info(f"💡 تم حساب البيانات بناءً على طلبات شهر {datetime.now().strftime('%B')} لسنة {current_year}")
+    if not df_book.empty and 'Date' in df_book.columns:
+        df_book['Date'] = pd.to_datetime(df_book['Date'], errors='coerce')
+        df_book['Paid'] = pd.to_numeric(df_book['Paid'], errors='coerce').fillna(0)
+        df_book['Remaining'] = pd.to_numeric(df_book['Remaining'], errors='coerce').fillna(0)
+        
+        total_paid = df_book['Paid'].sum()
+        total_remaining = df_book['Remaining'].sum()
+        total_count = len(df_book)
+        
+        thirty_days_ago = datetime.now() - pd.Timedelta(days=30)
+        df_filtered = df_book[df_book['Date'] >= thirty_days_ago]
+        
+        recent_paid = df_filtered['Paid'].sum()
+        recent_count = len(df_filtered)
+        
+        st.subheader("📈 الإجمالي الكلي (منذ البداية)")
+        c1, c2, c3 = st.columns(3)
+        c1.metric("إجمالي التحصيل الكلي", f"{total_paid:,.0f} ج.م")
+        c2.metric("إجمالي المتبقي الكلي", f"{total_remaining:,.0f} ج.م")
+        c3.metric("عدد الطلبات الكلي", total_count)
+        
+        st.write("---")
+        st.subheader("🗓️ أداء آخر 30 يوم")
+        c4, c5 = st.columns(2)
+        c4.metric("تحصيل آخر 30 يوم", f"{recent_paid:,.0f} ج.م")
+        c5.metric("عدد الطلبات في 30 يوم", recent_count)
+        
+        if not df_filtered.empty:
+            st.write("📋 الطلبات الأخيرة:")
+            st.dataframe(df_filtered[['Name', 'Status', 'Paid', 'Date']])
+        else:
+            st.info("لا توجد طلبات جديدة في آخر 30 يوم.")
+    else:
+        st.warning("تأكد من وجود البيانات في الشيت وتسمية عمود التاريخ بـ 'Date'.")
 
 # --- 2. تسجيل عميلة جديدة ---
 elif choice == "➕ تسجيل عميلة جديدة":
