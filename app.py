@@ -245,12 +245,12 @@ elif choice == "📦 الطلبات المكتملة":
 # --- 5. بحث ---
 elif choice == "🔍 بحث علي عميل و تعديل":
     st.title("🔍 بحث علي عميل و تعديل")
-    
-    # جلب البيانات
-    def to_num(val):
+
+        def to_num(val):
     try: return float(val)
     except: return 0.0
-        
+    
+    # جلب البيانات
     df_cust = get_data(customers_sheet)
     search = st.text_input("🔎 ابحث باسم العميل:")
     
