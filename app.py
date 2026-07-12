@@ -15,36 +15,44 @@ def get_cached_sheet(sheet_name):
 import streamlit as st
 
 # دالة التحقق من الباسورد
+import streamlit as st
+
+# 1. إعدادات الصفحة (لازم تكون أول أمر)
+st.set_page_config(page_title="Lobna's System", page_icon="👗", layout="wide")
+
+# 2. دالة كلمة السر
 def check_password():
-    # حط هنا الباسورد اللي أنت عايزه
     password = "4713" 
-    
-    # واجهة إدخال الباسورد
     input_password = st.text_input("🔐 يرجى إدخال كلمة المرور لدخول النظام:", type="password")
     
     if input_password == password:
         return True
     elif input_password == "":
         st.info("الرجاء إدخال كلمة المرور للدخول.")
-        st.stop() # بيوقف تحميل باقي التطبيق
+        st.stop()
     else:
         st.error("❌ كلمة المرور غير صحيحة!")
-        st.stop() # بيوقف تحميل باقي التطبيق
+        st.stop()
 
-# --- بداية السيستم ---
-if check_password(choice = st.sidebar.radio(
-    "🧭 القائمة الرئيسية:", 
-    ["📊 لوحة التحكم", "➕ تسجيل عميلة جديدة", "💰 الحسابات والطلبات", "📦 الطلبات المكتملة", "🔍 بحث علي عميل و تعديل", "👤 حساب العميل", "💰 مديونيات العملاء", "📅 التسليمات"],
-    key="main_menu"  # <---ده اللي هيخلينا نتحكم في الاختيار
-)
-):
-    # هنا هتحط كل الكود بتاعك اللي كان موجود أصلاً
-    # يعني كل الـ if/elif بتاعت الـ menu هتبقى جوه الـ if دي
+# 3. شرط الدخول (كل الكود اللي جاي لازم يكون تحت الـ if دي)
+if check_password():
     
-    # مثال:
-    # st.title("أهلاً بك يا يوسف")
-    # choice = st.sidebar.selectbox(...)
-    # ... وباقي كودك ...
+    # الـ sidebar والـ choice هيكونوا هنا جوه الـ if
+    choice = st.sidebar.radio(
+        "🧭 القائمة الرئيسية:", 
+        ["📊 لوحة التحكم", "➕ تسجيل عميلة جديدة", "💰 الحسابات والطلبات", "📦 الطلبات المكتملة", "🔍 بحث علي عميل و تعديل", "👤 حساب العميل", "💰 مديونيات العملاء", "📅 التسليمات"],
+        key="main_menu" 
+    )
+
+    # هنا هتبدأ الـ if/elif بتاعتك (البرنامج العادي)
+    if choice == "📊 لوحة التحكم":
+        st.write("أهلاً بك في لوحة التحكم")
+        # ... باقي الكود بتاعك ...
+        
+    elif choice == "💰 الحسابات والطلبات":
+        # ... حط الكود اللي ظبطناه سوا ...
+        st.title("💰 الحسابات والطلبات")
+        # ... الخ
 
 # إعدادات الواجهة
 st.set_page_config(page_title="Lobna's System", page_icon="👗", layout="wide")
