@@ -19,6 +19,11 @@ except Exception as e:
     st.stop()
 
 @st.cache_data(ttl=3600, hash_funcs={gspread.worksheet.Worksheet: lambda _: None})
+def load_all_data():
+    df_bookings = get_data(completed_bookings_sheet)   # تأكد إن دي bookings_sheet
+    df_completed = get_data(completed_sheet) # تأكد إن دي completed_sheet
+    df_customers = get_data(customers_sheet) # تأكد إن دي customers_sheet
+    return df_bookings, df_completed, df_customers
 def get_data(sheet):
     raw_data = sheet.get_all_values()
     if len(raw_data) > 1:
