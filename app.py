@@ -45,13 +45,15 @@ else:
 with st.sidebar:
     st.write("---")
     if st.button("🔄 تحديث البيانات"):
-        st.cache_resource.clear() # بيمسح الكاش
+        # امسح الكاش الخاص بالاتصالات
+        st.cache_resource.clear() 
+        # امسح الكاش الخاص بالبيانات والجداول (ده اللي كان ناقص!)
+        st.cache_data.clear() 
         
-        # *** دي الإضافة الجديدة ***
-        # بنجبر القائمة ترجع لأول اختيار
+        # ارجع لأول صفحة عشان نضمن مفيش حاجة معلقة
         st.session_state["main_menu"] = "📊 لوحة التحكم" 
         
-        st.rerun() # بيعمل تحديث
+        st.rerun()
         
 def get_data(sheet):
     raw_data = sheet.get_all_values()
