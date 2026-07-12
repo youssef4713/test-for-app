@@ -418,54 +418,69 @@ elif choice == "👤 حساب العميل":
 elif choice == "💰 مديونيات العملاء":
     st.title("📂 ملفات المديونيات")
     
-    # جلب البيانات
+    # 1. جلب البيانات
     df = get_data(bookings_sheet)
     
-    # تنظيف البيانات
+    # تنظيف البيانات والتأكد إنها أرقام
     df['Total_Price'] = pd.to_numeric(df['Total_Price'], errors='coerce').fillna(0)
     df['Paid'] = pd.to_numeric(df['Paid'], errors='coerce').fillna(0)
     df['Remaining'] = df['Total_Price'] - df['Paid']
     
-    # فلترة المديونيات فقط
+    # فلترة المديونيات فقط (اللي المتبقي فيها أكبر من 0)
     df_debtors = df[df['Remaining'] > 0]
     
     if not df_debtors.empty:
-        # تجميع المديونيات حسب اسم العميل
-        grouped = df_debtors.groupby('Name')
-        
-        # عرض إجمالي المديونيات
+        # حساب إجمالي المديونيات في الأتيليه كله
         total_all = df_debtors['Remaining'].sum()
         st.metric("💰 إجمالي المديونيات عند كل العملاء", f"{total_all:,.0f} ج.م")
+        
+        # تجميع البيانات حسب اسم العميل
+        grouped = df_debtors.groupby('Name')
         
         # إنشاء "مجلد" لكل عميل
         for name, group in grouped:
             client_total_debt = group['Remaining'].sum()
             
             with st.expander(f"📁 العميل: {name} | إجمالي المديونية: {client_total_debt:,.0f} ج.م"):
-                # عرض أوردرات العميل الواحد جوه المجلد
+                # عرض تفاصيل الأوردرات الخاصة بالعميل
                 for idx, row in group.iterrows():
                     st.write("---")
-                    st.write(f"**الطلب:** {row['Status']} - **المتبقي:** {row['Remaining']} ج.م")
+                    # استخدام .get للحماية من الأخطاء
+                    order_type = row.get('Order_Type', 'طلب غير محدد')
+                    current_remaining = row['Remaining']
+                    
+                    st.write(f"**الطلب:** {order_type} | **المتبقي:** {current_remaining:,.0f} ج.م")
                     
                     with st.form(f"update_{idx}"):
-                        # خانات التعديل
-                        new_total = st.number_input("تعديل الإجمالي:", value=float(row['Total_Price']), step=50.0, key=f"t_{idx}")
-                        new_paid = st.number_input("إضافة دفعة (أو تعديل المدفوع):", value=float(row['Paid']), step=50.0, key=f"p_{idx}")
+                        st.write(f"💳 المدفوع حالياً: {row['Paid']} ج.م")
                         
-                        if st.form_submit_button("💾 حفظ"):
-                            # تحديث الصف في الإكسيل
-                            # بنستخدم idx + 2 عشان الإكسيل بيبدأ من 1 والصف الأول للهيدر
-                            actual_row_idx = idx + 2 
-                            headers = bookings_sheet.row_values(1)
-                            def get_col_idx(col_name): return headers.index(col_name) + 1
-                            
-                            bookings_sheet.update_cell(actual_row_idx, get_col_idx('Total_Price'), str(new_total))
-                            bookings_sheet.update_cell(actual_row_idx, get_col_idx('Paid'), str(new_paid))
-                            
-                            st.success("تم التحديث!")
-                            st.rerun()
+                        # خانة إضافة دفعة جديدة (تجمع على القديم)
+                        new_payment = st.number_input("إضافة دفعة جديدة (المبلغ اللي دفعه دلوقتي):", value=0.0, step=50.0, key=f"p_{idx}")
+                        
+                        # خانة تعديل الإجمالي (لو السعر اتغير)
+                        new_total = st.number_input("تعديل إجمالي الحساب (إذا تغير):", value=float(row['Total_Price']), step=50.0, key=f"t_{idx}")
+
+                        if st.form_submit_button("💾 حفظ التحديث"):
+                            try:
+                                # الحسبة الصح (القديم + الجديد)
+                                old_paid = float(row['Paid'])
+                                updated_paid = old_paid + new_payment 
+                                
+                                # تحديد رقم الصف (idx + 2 لأننا بدأنا من 0 والإكسيل فيه هيدر)
+                                actual_row_idx = idx + 2 
+                                headers = bookings_sheet.row_values(1)
+                                def get_col_idx(col_name): return headers.index(col_name) + 1
+                                
+                                # تحديث الشيت
+                                bookings_sheet.update_cell(actual_row_idx, get_col_idx('Total_Price'), str(new_total))
+                                bookings_sheet.update_cell(actual_row_idx, get_col_idx('Paid'), str(updated_paid))
+                                
+                                st.success(f"تم التحديث! إجمالي ما دفعه العميل الآن: {updated_paid} ج.م")
+                                st.rerun() # تحديث الصفحة عشان تشوف النتيجة فوراً
+                            except Exception as e:
+                                st.error(f"حدث خطأ أثناء التحديث: {e}")
     else:
-        st.success("مفيش أي مديونيات حالياً.")
+        st.success("مفيش أي مديونيات حالياً. عاش يا وحش!")
         
 #--------------تواريخ التسليم----------------
 
