@@ -272,7 +272,7 @@ elif choice == "🔍 بحث علي عميل و تعديل":
                         new_chest = c1.number_input("دوران الصدر", value=to_num(row.get('Chest', '')), format="%f", key=f"chest_{idx}")
                         new_waist = c1.number_input("دوران الوسط", value=to_num(row.get('Waist', '')), format="%f", key=f"waist_{idx}")
                         new_dart = c1.number_input("بنسة الصدر", value=to_num(row.get('Chest_Dart', '')), format="%f", key=f"dart_{idx}")
-                        new_thigh = c1.text_input("عرض الفخذ", value=to_num(row.get('Thigh_Width', '')), format="%f", key=f"thigh_{idx}")
+                        new_thigh = c1.number_input("عرض الفخذ", value=to_num(row.get('Thigh_Width', '')), format="%f", key=f"thigh_{idx}")
                         
                         new_len = c2.number_input("الطول الكلي", value=to_num(row.get('Length', '')), format="%f", key=f"len_{idx}")
                         new_sleeve = c2.number_input("عرض الكم", value=to_num(row.get('Sleeve_Width', '')), format="%f", key=f"sleeve_{idx}")
