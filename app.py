@@ -30,31 +30,56 @@ choice = st.sidebar.selectbox("🧭 القائمة الرئيسية:",
                               ["📊 لوحة التحكم", "➕ تسجيل عميلة جديدة", "💰 الحسابات والطلبات", "📦 الطلبات المكتملة", "🔍 بحث علي عميل و تعديل"])
 
 # --- 1. لوحة التحكم (KPIs) ---
-if choice == "📊 لوحة التحكم":
+elif choice == "📊 لوحة التحكم":
     st.title("📊 لوحة التحكم - الأتيليه")
     
+    # 1. جلب البيانات من الشيتين
     df_active = get_data(bookings_sheet)
     df_archive = get_data(completed_sheet)
+    
+    # تعريف الأعمدة عشان نضمن إن الكود يقرأ صح
     cols = ['Booking_ID', 'Name', 'Registration_Date', 'Delivery_Date', 'Status', 'Dress_Details', 'Total_Price', 'Paid', 'Remaining']
     
-    if not df_active.empty: df_active.columns = cols
-    if not df_archive.empty: df_archive.columns = cols
+    # التأكد إن الداتا مش فاضية وتجهيزها
+    if not df_active.empty: 
+        df_active.columns = cols
+        df_active['Paid'] = pd.to_numeric(df_active['Paid'], errors='coerce').fillna(0)
+    else:
+        df_active = pd.DataFrame(columns=cols)
+        df_active['Paid'] = 0
+        
+    if not df_archive.empty: 
+        df_archive.columns = cols
+        df_archive['Paid'] = pd.to_numeric(df_archive['Paid'], errors='coerce').fillna(0)
+    else:
+        df_archive = pd.DataFrame(columns=cols)
+        df_archive['Paid'] = 0
     
-    df_all = pd.concat([df_active, df_archive], ignore_index=True)
-    df_all['Paid'] = pd.to_numeric(df_all['Paid'], errors='coerce').fillna(0)
-    df_all['Remaining'] = pd.to_numeric(df_all['Remaining'], errors='coerce').fillna(0)
+    # 2. الحسابات
+    # إجمالي الأرباح المحصلة = مجموع المدفوع من النشط + مجموع المدفوع من المكتمل
+    total_revenue = df_active['Paid'].sum() + df_archive['Paid'].sum()
     
-    df_all['Registration_Date'] = pd.to_datetime(df_all['Registration_Date'], errors='coerce')
-    df_month = df_all[(df_all['Registration_Date'].dt.month == 7) & (df_all['Registration_Date'].dt.year == 2026)]
+    # حساب الطلبات
+    total_active_count = len(df_active)
+    total_completed_count = len(df_archive)
     
+    # 3. عرض البيانات
     col1, col2 = st.columns(2)
     with col1:
-        st.metric("إجمالي الطلبات هذا الشهر", f"{len(df_month)} طلب")
-        st.metric("فستان تم تسليمه", f"{len(df_month[df_month['Status'] == 'تم التسليم'])}")
+        st.metric("عدد الطلبات الحالية", total_active_count)
+        st.metric("عدد الطلبات المكتملة", total_completed_count)
+        
     with col2:
-        st.metric("الأرباح المحصلة", f"{df_month[df_month['Status'] == 'تم التسليم']['Paid'].sum()} ج.م")
-        st.metric("مبالغ منتظر تحصيلها", f"{df_month[df_month['Status'] != 'تم التسليم']['Remaining'].sum()} ج.م")
+        st.metric("💰 إجمالي الأرباح المحصلة", f"{total_revenue:,.0f} ج.م")
+        # ملاحظة: دي بتجمع الفلوس من الشيتين مع بعض
+        st.info("هذا الرقم يمثل إجمالي المبالغ التي تم دفعها في الطلبات الحالية والقديمة.")
 
+    # اختيار اختياري: عرض جدول بسيط للطلبات الحالية
+    if not df_active.empty:
+        st.write("---")
+        st.subheader("نظرة سريعة على الطلبات الحالية:")
+        st.dataframe(df_active[['Name', 'Status', 'Paid', 'Remaining']], use_container_width=True)
+        
 # --- 2. تسجيل عميلة جديدة ---
 elif choice == "➕ تسجيل عميلة جديدة":
     st.title("➕ تسجيل عميلة جديدة")
