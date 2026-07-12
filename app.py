@@ -33,81 +33,49 @@ choice = st.sidebar.selectbox("🧭 القائمة الرئيسية:",
 if choice == "📊 لوحة التحكم":
     st.title("📊 لوحة التحكم - الأتيليه")
     
-    # 1. جلب البيانات من الشيتين
+    # 1. جلب وتجهيز البيانات
     df_active = get_data(bookings_sheet)
     df_archive = get_data(completed_sheet)
     
-    # تعريف الأعمدة عشان نضمن إن الكود يقرأ صح
     cols = ['Booking_ID', 'Name', 'Registration_Date', 'Delivery_Date', 'Status', 'Dress_Details', 'Total_Price', 'Paid', 'Remaining']
     
-    # التأكد إن الداتا مش فاضية وتجهيزها
-    if not df_active.empty: 
-        df_active.columns = cols
-        df_active['Paid'] = pd.to_numeric(df_active['Paid'], errors='coerce').fillna(0)
-    else:
-        df_active = pd.DataFrame(columns=cols)
-        df_active['Paid'] = 0
-        
-    if not df_archive.empty: 
-        df_archive.columns = cols
-        df_archive['Paid'] = pd.to_numeric(df_archive['Paid'], errors='coerce').fillna(0)
-    else:
-        df_archive = pd.DataFrame(columns=cols)
-        df_archive['Paid'] = 0
+    # دالة لتنظيف وتجهيز الداتا (عشان نتجنب إيرور الأعمدة أو القيم الفاضية)
+    def clean_df(df, cols):
+        if not df.empty:
+            df.columns = cols
+            df['Paid'] = pd.to_numeric(df['Paid'], errors='coerce').fillna(0)
+            df['Remaining'] = pd.to_numeric(df['Remaining'], errors='coerce').fillna(0)
+            return df
+        return pd.DataFrame(columns=cols)
+
+    df_active = clean_df(df_active, cols)
+    df_archive = clean_df(df_archive, cols)
     
     # 2. الحسابات
-    # إجمالي الأرباح المحصلة = مجموع المدفوع من النشط + مجموع المدفوع من المكتمل
+    # الأرباح المحصلة = إجمالي المدفوع في كل الشيتات
     total_revenue = df_active['Paid'].sum() + df_archive['Paid'].sum()
     
-    # حساب الطلبات
-    total_active_count = len(df_active)
-    total_completed_count = len(df_archive)
+    # مبالغ منتظر تحصيلها = المتبقي في الطلبات النشطة فقط
+    pending_money = df_active['Remaining'].sum()
     
-    # 3. عرض البيانات
+    # 3. العرض
     col1, col2 = st.columns(2)
     with col1:
-        st.metric("عدد الطلبات الحالية", total_active_count)
-        st.metric("عدد الطلبات المكتملة", total_completed_count)
+        st.metric("عدد الطلبات الحالية", len(df_active))
+        st.metric("عدد الطلبات المكتملة", len(df_archive))
         
     with col2:
         st.metric("💰 إجمالي الأرباح المحصلة", f"{total_revenue:,.0f} ج.م")
-        # ملاحظة: دي بتجمع الفلوس من الشيتين مع بعض
-        st.info("هذا الرقم يمثل إجمالي المبالغ التي تم دفعها في الطلبات الحالية والقديمة.")
+        st.metric("⏳ مبالغ منتظر تحصيلها", f"{pending_money:,.0f} ج.م")
+    
+    st.write("---")
+    st.info("💡 البيانات تشمل جميع الطلبات المسجلة في النظام")
 
-    # اختيار اختياري: عرض جدول بسيط للطلبات الحالية
+    # جدول سريع للطلبات النشطة
     if not df_active.empty:
-        st.write("---")
-        st.subheader("نظرة سريعة على الطلبات الحالية:")
-        st.dataframe(df_active[['Name', 'Status', 'Paid', 'Remaining']], use_container_width=True)
+        st.subheader("تفاصيل الطلبات الحالية:")
+        st.dataframe(df_active[['Name', 'Status', 'Remaining']], use_container_width=True)
         
-# --- 2. تسجيل عميلة جديدة ---
-elif choice == "➕ تسجيل عميلة جديدة":
-    st.title("➕ تسجيل عميلة جديدة")
-    with st.form("new_customer", clear_on_submit=True):
-        st.subheader("👤 البيانات الأساسية")
-        col1, col2 = st.columns(2)
-        name = col1.text_input("اسم الزبونة")
-        phone = col2.text_input("التليفون")
-        
-        st.subheader("📐 المقاسات")
-        c1, c2, c3 = st.columns(3)
-        chest = c1.text_input("دوران الصدر")
-        waist = c1.text_input("دوران الوسط")
-        chest_dart = c1.text_input("بنسة الصدر")
-        length = c2.text_input("الطول الكلي")
-        sleeve_width = c2.text_input("عرض الكم")
-        neck_to_waist = c2.text_input("طول الرقبة للوسط")
-        waist_to_bottom = c3.text_input("طول الوسط لأسفل")
-        hips = c3.text_input("دوران الأرداف")
-        crotch = c3.text_input("الحجر")
-        inseam = c3.text_input("الحجر الداخلي")
-        thigh_width = c3.text_input("عرض الفخذ")
-        thigh_length_k = c3.text_input("طول الفخذ للركبة")
-        notes = st.text_area("ملاحظات")
-        
-        if st.form_submit_button("💾 حفظ بيانات العميل"):
-            customers_sheet.append_row(["QS-NEW", name, phone, chest, waist, hips, length, neck_to_waist, waist_to_bottom, crotch, inseam, thigh_width, thigh_length_k, chest_dart, sleeve_width, notes, datetime.now().strftime("%Y-%m-%d")])
-            st.success(f"تم حفظ بيانات {name} بنجاح!")
 # --- 3. الحسابات والطلبات (مع ميزة تعديل الفلوس وأوتوماتيك التسليم) ---
 
 elif choice == "💰 الحسابات والطلبات":
