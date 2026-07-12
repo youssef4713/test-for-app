@@ -339,7 +339,6 @@ elif choice == "👤 حساب العميل":
     df_comp = get_data(completed_sheet) 
     
     # دمج الطلبات (الجارية + المكتملة)
-    # التأكد من وجود بيانات قبل الدمج لتجنب الأخطاء
     if not df_book.empty and not df_comp.empty:
         all_orders = pd.concat([df_book, df_comp], ignore_index=True)
     elif not df_book.empty:
@@ -364,9 +363,10 @@ elif choice == "👤 حساب العميل":
         
         # --- الجزء الأول: الإحصائيات المالية ---
         st.subheader(f"📊 نظرة عامة: {selected_name}")
+        # **الإضافة الجديدة هنا:**
+        st.write(f"📞 **رقم التليفون:** {cust_data.get('Phone', 'غير مسجل')}")
         
         if not cust_history.empty:
-            # ** التعديل المهم هنا: تحويل الأعمدة لأرقام قبل الجمع **
             cust_history['Paid'] = pd.to_numeric(cust_history['Paid'], errors='coerce').fillna(0)
             cust_history['Remaining'] = pd.to_numeric(cust_history['Remaining'], errors='coerce').fillna(0)
             
@@ -405,11 +405,10 @@ elif choice == "👤 حساب العميل":
         # --- الجزء الثالث: تاريخ التعاملات ---
         st.subheader("📜 تاريخ الطلبات")
         if not cust_history.empty:
-            # ترتيب الجدول بالأحدث (بافتراض إن عمود Registration_Date موجود)
             st.dataframe(cust_history[['Registration_Date', 'Status', 'Total_Price', 'Paid', 'Remaining', 'Dress_Details']], use_container_width=True)
         else:
             st.warning("لا يوجد تاريخ طلبات لهذا العميل.")
-
+            
 #------------مديونيات العملاء--------------
 
 elif choice == "💰 مديونيات العملاء":
