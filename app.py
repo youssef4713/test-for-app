@@ -13,6 +13,8 @@ def get_cached_sheet(sheet_name):
 st.set_page_config(page_title="Lobna's System", page_icon="👗", layout="wide")
 
 # الاتصال بجوجل شيتس
+@st.cache_resource
+def get_all_sheets():
 try:
     creds = st.secrets["gcp_service_account"]
     gc = gspread.service_account_from_dict(creds)
