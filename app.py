@@ -190,7 +190,6 @@ elif choice == "📦 الطلبات المكتملة":
 elif choice == "🔍 بحث علي عميل و تعديل":
     st.title("🔍 بحث علي عميل و تعديل")
     
-    @st.cache_data(ttl=3600)
     df_cust = get_data(customers_sheet)
     search = st.text_input("🔎 ابحث باسم العميل أو اختر من القائمة أدناه:")
     
