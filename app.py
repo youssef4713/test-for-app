@@ -71,6 +71,14 @@ def get_data(sheet):
         df = pd.DataFrame(raw_data[1:], columns=[c.strip() for c in raw_data[0]])
         return df
     return pd.DataFrame()
+    
+#----------السايد بار---------
+    choice = st.sidebar.radio(
+        "🧭 القائمة الرئيسية:", 
+        ["📊 لوحة التحكم", "➕ تسجيل عميلة جديدة", "💰 الحسابات والطلبات", "📦 الطلبات المكتملة", "🔍 بحث علي عميل و تعديل", "👤 حساب العميل", "💰 مديونيات العملاء", "📅 التسليمات"],
+        key="main_menu" 
+    )
+
 
 # --- 1. لوحة التحكم (KPIs) ---
 if choice == "📊 لوحة التحكم":
