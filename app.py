@@ -247,6 +247,10 @@ elif choice == "🔍 بحث علي عميل و تعديل":
     st.title("🔍 بحث علي عميل و تعديل")
     
     # جلب البيانات
+    def to_num(val):
+    try: return float(val)
+    except: return 0.0
+        
     df_cust = get_data(customers_sheet)
     search = st.text_input("🔎 ابحث باسم العميل:")
     
@@ -264,21 +268,21 @@ elif choice == "🔍 بحث علي عميل و تعديل":
                         c1, c2, c3 = st.columns(3)
                         
                         # الحقول - ضفنا هنا خانة التليفون
-                        new_phone = c1.text_input("رقم التليفون", value=str(row.get('Phone', '')), key=f"phone_{idx}")
-                        new_chest = c1.text_input("دوران الصدر", value=str(row.get('Chest', '')), key=f"chest_{idx}")
-                        new_waist = c1.text_input("دوران الوسط", value=str(row.get('Waist', '')), key=f"waist_{idx}")
-                        new_dart = c1.text_input("بنسة الصدر", value=str(row.get('Chest_Dart', '')), key=f"dart_{idx}")
-                        new_thigh = c1.text_input("عرض الفخذ", value=str(row.get('Thigh_Width', '')), key=f"thigh_{idx}")
+                        new_phone = c1.text_input("رقم التليفون", value=to_num(row.get('Phone', '')), format="%f", key=f"phone_{idx}")
+                        new_chest = c1.text_input("دوران الصدر", value=to_num(row.get('Chest', '')), format="%f", key=f"chest_{idx}")
+                        new_waist = c1.text_input("دوران الوسط", value=to_num(row.get('Waist', '')), format="%f", key=f"waist_{idx}")
+                        new_dart = c1.text_input("بنسة الصدر", value=to_num(row.get('Chest_Dart', '')), format="%f", key=f"dart_{idx}")
+                        new_thigh = c1.text_input("عرض الفخذ", value=to_num(row.get('Thigh_Width', '')), format="%f", key=f"thigh_{idx}")
                         
-                        new_len = c2.text_input("الطول الكلي", value=str(row.get('Length', '')), key=f"len_{idx}")
-                        new_sleeve = c2.text_input("عرض الكم", value=str(row.get('Sleeve_Width', '')), key=f"sleeve_{idx}")
-                        new_neck = c2.text_input("طول الرقبة للوسط", value=str(row.get('Neck_to_Waist', '')), key=f"neck_{idx}")
-                        new_inseam = c2.text_input("الحجر الداخلي", value=str(row.get('Inseam', '')), key=f"inseam_{idx}")
+                        new_len = c2.text_input("الطول الكلي", value=to_num(row.get('Length', '')), format="%f", key=f"len_{idx}")
+                        new_sleeve = c2.text_input("عرض الكم", value=to_num(row.get('Sleeve_Width', '')), format="%f", key=f"sleeve_{idx}")
+                        new_neck = c2.text_input("طول الرقبة للوسط", value=to_num(row.get('Neck_to_Waist', '')), format="%f", key=f"neck_{idx}")
+                        new_inseam = c2.text_input("الحجر الداخلي", value=to_num(row.get('Inseam', '')), format="%f", key=f"inseam_{idx}")
                         
-                        new_waist_bot = c3.text_input("طول الوسط لأسفل", value=str(row.get('Waist_to_Bottom', '')), key=f"wbot_{idx}")
-                        new_hips = c3.text_input("دوران الأرداف", value=str(row.get('Hips', '')), key=f"hips_{idx}")
-                        new_crotch = c3.text_input("الحجر", value=str(row.get('Crotch', '')), key=f"crotch_{idx}")
-                        new_thigh_knee = c3.text_input("طول الفخذ للركبة", value=str(row.get('thigh_length_k', '')), key=f"thk_{idx}")
+                        new_waist_bot = c3.text_input("طول الوسط لأسفل", value=str(row.get('Waist_to_Bottom', '')), format="%f", key=f"wbot_{idx}")
+                        new_hips = c3.text_input("دوران الأرداف", value=str(row.get('Hips', '')), format="%f", key=f"hips_{idx}")
+                        new_crotch = c3.text_input("الحجر", value=str(row.get('Crotch', '')), format="%f", key=f"crotch_{idx}")
+                        new_thigh_knee = c3.text_input("طول الفخذ للركبة", value=str(row.get('thigh_length_k', '')), format="%f", key=f"thk_{idx}")
                         new_notes = st.text_area("ملاحظات", value=str(row.get('Notes', '')), key=f"notes_{idx}")
                         
                         if st.form_submit_button("💾 تحديث المقاسات"):
