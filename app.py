@@ -106,10 +106,6 @@ elif choice == "➕ تسجيل عميلة جديدة":
 
 
 # --- 3. الحسابات والطلبات (مع ميزة تعديل الفلوس وأوتوماتيك التسليم) ---
-@st.cache_data(ttl=600) 
-def get_data(sheet):
-    raw_data = sheet.get_all_values()
-
 elif choice == "💰 الحسابات والطلبات":
     st.title("💰 الحسابات والطلبات")
 
@@ -187,10 +183,6 @@ elif choice == "💰 الحسابات والطلبات":
         st.dataframe(df_book[['Name', 'Status', 'Total_Price', 'Paid', 'Remaining']], use_container_width=True)
 
 # --- 4. الطلبات المكتملة ---
-@st.cache_data(ttl=600) 
-def get_data(sheet):
-    raw_data = sheet.get_all_values()
-
 elif choice == "📦 الطلبات المكتملة":
     st.title("📦 أرشيف الطلبات المكتملة")
     df_comp = get_data(completed_sheet)
