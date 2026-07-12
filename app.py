@@ -416,50 +416,54 @@ elif choice == "👤 حساب العميل":
 #------------مديونيات العملاء--------------
 
 elif choice == "💰 مديونيات العملاء":
-    st.title("💰 مديونيات العملاء")
+    st.title("📂 ملفات المديونيات")
     
-    # 1. جلب البيانات
+    # جلب البيانات
     df = get_data(bookings_sheet)
     
-    # تحويل الأعمدة لأرقام (مع الأسماء الجديدة)
+    # تنظيف البيانات
     df['Total_Price'] = pd.to_numeric(df['Total_Price'], errors='coerce').fillna(0)
     df['Paid'] = pd.to_numeric(df['Paid'], errors='coerce').fillna(0)
-    
-    # حساب المتبقي
     df['Remaining'] = df['Total_Price'] - df['Paid']
     
-    # 2. فلترة الأوردرات اللي عليها مديونية فقط
-    debtors = df[df['Remaining'] > 0]
+    # فلترة المديونيات فقط
+    df_debtors = df[df['Remaining'] > 0]
     
-    if not debtors.empty:
-        total_debt = debtors['Remaining'].sum()
-        st.metric("💰 إجمالي المديونيات في الأتيليه", f"{total_debt:,.0f} ج.م")
+    if not df_debtors.empty:
+        # تجميع المديونيات حسب اسم العميل
+        grouped = df_debtors.groupby('Name')
         
-        # 3. عرض كل أوردر مديون
-        for idx, row in debtors.iterrows():
-            with st.expander(f"👤 {row['Name']} - متبقي: {row['Remaining']} ج.م"):
-                with st.form(f"debt_form_{idx}"):
-                    st.write(f"**نوع الطلب:** {row.get('Order_Type', 'غير محدد')}")
+        # عرض إجمالي المديونيات
+        total_all = df_debtors['Remaining'].sum()
+        st.metric("💰 إجمالي المديونيات عند كل العملاء", f"{total_all:,.0f} ج.م")
+        
+        # إنشاء "مجلد" لكل عميل
+        for name, group in grouped:
+            client_total_debt = group['Remaining'].sum()
+            
+            with st.expander(f"📁 العميل: {name} | إجمالي المديونية: {client_total_debt:,.0f} ج.م"):
+                # عرض أوردرات العميل الواحد جوه المجلد
+                for idx, row in group.iterrows():
+                    st.write("---")
+                    st.write(f"**الطلب:** {row['Order_Type']} - **المتبقي:** {row['Remaining']} ج.م")
                     
-                    # خانات التعديل (الأسماء الجديدة هنا)
-                    new_total = st.number_input("إجمالي الحساب:", value=float(row['Total_Price']), step=50.0, key=f"total_{idx}")
-                    new_paid = st.number_input("المبلغ المدفوع:", value=float(row['Paid']), step=50.0, key=f"paid_{idx}")
-                    
-                    if st.form_submit_button("💾 تحديث المديونية"):
-                        try:
-                            # تحديث الصف
+                    with st.form(f"update_{idx}"):
+                        # خانات التعديل
+                        new_total = st.number_input("تعديل الإجمالي:", value=float(row['Total_Price']), step=50.0, key=f"t_{idx}")
+                        new_paid = st.number_input("إضافة دفعة (أو تعديل المدفوع):", value=float(row['Paid']), step=50.0, key=f"p_{idx}")
+                        
+                        if st.form_submit_button("💾 حفظ"):
+                            # تحديث الصف في الإكسيل
+                            # بنستخدم idx + 2 عشان الإكسيل بيبدأ من 1 والصف الأول للهيدر
                             actual_row_idx = idx + 2 
                             headers = bookings_sheet.row_values(1)
-                            def get_col_idx(name): return headers.index(name) + 1
+                            def get_col_idx(col_name): return headers.index(col_name) + 1
                             
-                            # التحديث باستخدام الأسماء الجديدة
                             bookings_sheet.update_cell(actual_row_idx, get_col_idx('Total_Price'), str(new_total))
                             bookings_sheet.update_cell(actual_row_idx, get_col_idx('Paid'), str(new_paid))
                             
-                            st.success("تم تحديث الحساب بنجاح!")
+                            st.success("تم التحديث!")
                             st.rerun()
-                        except Exception as e:
-                            st.error(f"خطأ في التحديث: {e}")
     else:
         st.success("مفيش أي مديونيات حالياً.")
         
