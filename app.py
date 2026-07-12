@@ -478,8 +478,8 @@ elif choice == "📅 تواريخ التسليم":
                 # تلوين الطلبات اللي ميعادها النهاردة أو فات (تنبيه)
                 delivery_date = row['Delivery_Date'].strftime('%Y-%m-%d')
                 
-                with st.expander(f"📦 {row['Customer_Name']} - موعد التسليم: {delivery_date}"):
-                    st.write(f"**اسم العميل:** {row['Customer_Name']}")
+                with st.expander(f"📦 {row['Name']} - موعد التسليم: {delivery_date}"):
+                    st.write(f"**اسم العميل:** {row['Name']}")
                     st.write(f"**نوع الطلب:** {row['Order_Type']}")
                     st.write(f"**المبلغ المتبقي:** {row['Remaining_Amount']} ج.م")
                     st.write(f"**ملاحظات:** {row['Notes']}")
