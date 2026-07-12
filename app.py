@@ -263,7 +263,8 @@ elif choice == "🔍 بحث علي عميل و تعديل":
                     with st.form(f"edit_meas_{idx}"):
                         c1, c2, c3 = st.columns(3)
                         
-                        # الحقول
+                        # الحقول - ضفنا هنا خانة التليفون
+                        new_phone = c1.text_input("رقم التليفون", value=str(row.get('Phone', '')), key=f"phone_{idx}")
                         new_chest = c1.text_input("دوران الصدر", value=str(row.get('Chest', '')), key=f"chest_{idx}")
                         new_waist = c1.text_input("دوران الوسط", value=str(row.get('Waist', '')), key=f"waist_{idx}")
                         new_dart = c1.text_input("بنسة الصدر", value=str(row.get('Chest_Dart', '')), key=f"dart_{idx}")
@@ -289,8 +290,7 @@ elif choice == "🔍 بحث علي عميل و تعديل":
                                 # 2. جلب عناوين الأعمدة الحالية من الشيت
                                 headers = customers_sheet.row_values(1)
                                 
-                                # 3. نظام "الربط الصارم" (Mapping)
-                                # ده بيحول اسم العمود لرقم العمود اللي موجود فعلياً في الشيت
+                                # 3. نظام "الربط الصارم"
                                 def get_col_idx(name):
                                     try:
                                         return headers.index(name) + 1
@@ -299,6 +299,7 @@ elif choice == "🔍 بحث علي عميل و تعديل":
 
                                 # 4. تجهيز قائمة التحديثات (الربط بالاسم)
                                 updates = [
+                                    (get_col_idx('Phone'), new_phone), # ضفنا دي هنا
                                     (get_col_idx('Chest'), new_chest),
                                     (get_col_idx('Waist'), new_waist),
                                     (get_col_idx('Chest_Dart'), new_dart),
@@ -314,7 +315,7 @@ elif choice == "🔍 بحث علي عميل و تعديل":
                                     (get_col_idx('Notes'), new_notes)
                                 ]
                                 
-                                # 5. التنفيذ: تحديث خلية خلية (بطيئة شوية بس "مستحيل" تغلط)
+                                # 5. التنفيذ
                                 for col_idx, value in updates:
                                     customers_sheet.update_cell(actual_row_idx, col_idx, value)
                                 
