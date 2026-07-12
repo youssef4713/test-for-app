@@ -11,13 +11,7 @@ def get_cached_sheet(sheet_name):
     # افترضنا إنك مسمي الـ client بتاعك 'client' في الكود، لو مسميه حاجة تانية غير الاسم هنا
     return client.open("اسم_ملف_جوجل_شيت_بتاعك").worksheet(sheet_name)
 
-
-import streamlit as st
-
-# دالة التحقق من الباسورد
-import streamlit as st
-
-# 1. إعدادات الصفحة (لازم تكون أول أمر)
+# إعدادات الواجهة
 st.set_page_config(page_title="Lobna's System", page_icon="👗", layout="wide")
 
 # 2. دالة كلمة السر
@@ -53,9 +47,6 @@ if check_password():
         # ... حط الكود اللي ظبطناه سوا ...
         st.title("💰 الحسابات والطلبات")
         # ... الخ
-
-# إعدادات الواجهة
-st.set_page_config(page_title="Lobna's System", page_icon="👗", layout="wide")
 
 # الاتصال بجوجل شيتس
 @st.cache_resource
