@@ -43,11 +43,16 @@ else:
     st.stop() # لو الاتصال فشل، البرنامج هيقف عشان ميكملش وهو معندوش بيانات
 
 with st.sidebar:
-    st.write("---") # خط فاصل للتنظيم
+    st.write("---")
     if st.button("🔄 تحديث البيانات"):
-        st.cache_data.clear() # بيمسح الكاش
-        st.rerun()            # بيعمل تحديث عشان يسحب الداتا الجديدة
-
+        st.cache_resource.clear() # بيمسح الكاش
+        
+        # *** دي الإضافة الجديدة ***
+        # بنجبر القائمة ترجع لأول اختيار
+        st.session_state["main_menu"] = "📊 لوحة التحكم" 
+        
+        st.rerun() # بيعمل تحديث
+        
 def get_data(sheet):
     raw_data = sheet.get_all_values()
     if len(raw_data) > 1:
@@ -61,17 +66,7 @@ choice = st.sidebar.radio(
     ["📊 لوحة التحكم", "➕ تسجيل عميلة جديدة", "💰 الحسابات والطلبات", "📦 الطلبات المكتملة", "🔍 بحث علي عميل و تعديل"],
     key="main_menu"  # <--- ده اللي هيخلينا نتحكم في الاختيار
 )
-with st.sidebar:
-    st.write("---")
-    if st.button("🔄 تحديث البيانات"):
-        st.cache_resource.clear() # بيمسح الكاش
-        
-        # *** دي الإضافة الجديدة ***
-        # بنجبر القائمة ترجع لأول اختيار
-        st.session_state["main_menu"] = "📊 لوحة التحكم" 
-        
-        st.rerun() # بيعمل تحديث
-        
+      
 # --- 1. لوحة التحكم (KPIs) ---
 if choice == "📊 لوحة التحكم":
     st.title("📊 لوحة التحكم - الأتيليه")
