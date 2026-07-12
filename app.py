@@ -428,64 +428,59 @@ elif choice == "💰 مديونيات العملاء":
     # 1. جلب البيانات
     df = get_data(bookings_sheet)
     
-    # تنظيف البيانات والتأكد إنها أرقام
+    # تنظيف البيانات
     df['Total_Price'] = pd.to_numeric(df['Total_Price'], errors='coerce').fillna(0)
     df['Paid'] = pd.to_numeric(df['Paid'], errors='coerce').fillna(0)
     df['Remaining'] = df['Total_Price'] - df['Paid']
     
-    # فلترة المديونيات فقط (اللي المتبقي فيها أكبر من 0)
+    # فلترة المديونيات فقط
     df_debtors = df[df['Remaining'] > 0]
     
     if not df_debtors.empty:
-        # حساب إجمالي المديونيات في الأتيليه كله
         total_all = df_debtors['Remaining'].sum()
         st.metric("💰 إجمالي المديونيات عند كل العملاء", f"{total_all:,.0f} ج.م")
         
         # تجميع البيانات حسب اسم العميل
         grouped = df_debtors.groupby('Name')
         
-        # إنشاء "مجلد" لكل عميل
         for name, group in grouped:
             client_total_debt = group['Remaining'].sum()
             
             with st.expander(f"📁 العميل: {name} | إجمالي المديونية: {client_total_debt:,.0f} ج.م"):
-                # عرض تفاصيل الأوردرات الخاصة بالعميل
                 for idx, row in group.iterrows():
                     st.write("---")
-                    # استخدام .get للحماية من الأخطاء
-                    order_type = row.get('Order_Type', 'طلب غير محدد')
-                    current_remaining = row['Remaining']
                     
-                    st.write(f"**الطلب:** {order_type} | **المتبقي:** {current_remaining:,.0f} ج.م")
+                    # --- عرض تفاصيل الطلب (قراءة فقط) ---
+                    # بنستخدم .get عشان لو العمود مش موجود ميطلعش خطأ
+                    details_text = row.get('Dress_Details', 'لا توجد تفاصيل إضافية')
+                    
+                    st.write(f"**الطلب:** {row.get('Order_Type', 'غير محدد')}")
+                    st.text_area("تفاصيل الطلب:", value=details_text, disabled=True, key=f"det_{idx}")
+                    st.write(f"**المتبقي:** {row['Remaining']:,.0f} ج.م")
+                    # -----------------------------------
                     
                     with st.form(f"update_{idx}"):
                         st.write(f"💳 المدفوع حالياً: {row['Paid']} ج.م")
                         
-                        # خانة إضافة دفعة جديدة (تجمع على القديم)
-                        new_payment = st.number_input("إضافة دفعة جديدة (المبلغ اللي دفعه دلوقتي):", value=0.0, step=50.0, key=f"p_{idx}")
-                        
-                        # خانة تعديل الإجمالي (لو السعر اتغير)
-                        new_total = st.number_input("تعديل إجمالي الحساب (إذا تغير):", value=float(row['Total_Price']), step=50.0, key=f"t_{idx}")
+                        new_payment = st.number_input("إضافة دفعة جديدة:", value=0.0, step=50.0, key=f"p_{idx}")
+                        new_total = st.number_input("تعديل إجمالي الحساب:", value=float(row['Total_Price']), step=50.0, key=f"t_{idx}")
 
                         if st.form_submit_button("💾 حفظ التحديث"):
                             try:
-                                # الحسبة الصح (القديم + الجديد)
                                 old_paid = float(row['Paid'])
                                 updated_paid = old_paid + new_payment 
                                 
-                                # تحديد رقم الصف (idx + 2 لأننا بدأنا من 0 والإكسيل فيه هيدر)
                                 actual_row_idx = idx + 2 
                                 headers = bookings_sheet.row_values(1)
                                 def get_col_idx(col_name): return headers.index(col_name) + 1
                                 
-                                # تحديث الشيت
                                 bookings_sheet.update_cell(actual_row_idx, get_col_idx('Total_Price'), str(new_total))
                                 bookings_sheet.update_cell(actual_row_idx, get_col_idx('Paid'), str(updated_paid))
                                 
-                                st.success(f"تم التحديث! إجمالي ما دفعه العميل الآن: {updated_paid} ج.م")
-                                st.rerun() # تحديث الصفحة عشان تشوف النتيجة فوراً
+                                st.success("تم التحديث!")
+                                st.rerun()
                             except Exception as e:
-                                st.error(f"حدث خطأ أثناء التحديث: {e}")
+                                st.error(f"خطأ: {e}")
     else:
         st.success("مفيش أي مديونيات حالياً. عاش يا وحش!")
         
