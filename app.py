@@ -33,6 +33,7 @@ choice = st.sidebar.selectbox("🧭 القائمة الرئيسية:",
 if choice == "📊 لوحة التحكم":
     st.title("📊 لوحة تحكم الأتيليه")
     df_book = get_data(bookings_sheet)
+    st.write(df_book.columns) # السطر ده هيظهرلك أسماء الأعمدة الحقيقية اللي البرنامج شايفها
     
     if not df_book.empty and 'Date' in df_book.columns:
         df_book['Date'] = pd.to_datetime(df_book['Date'], errors='coerce')
