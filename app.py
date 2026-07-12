@@ -79,6 +79,7 @@ if choice == "📊 لوحة التحكم":
 @st.cache_data(ttl=600) 
 def get_data(sheet):
     raw_data = sheet.get_all_values()
+    #
 
 elif choice == "➕ تسجيل عميلة جديدة":
     st.title("➕ تسجيل عميلة جديدة")
