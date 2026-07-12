@@ -246,63 +246,56 @@ elif choice == "📦 الطلبات المكتملة":
 elif choice == "🔍 بحث علي عميل و تعديل":
     st.title("🔍 بحث علي عميل و تعديل")
     
-    # جلب البيانات
     df_cust = get_data(customers_sheet)
-    
-    # مربع البحث
-    search = st.text_input("🔎 ابحث باسم العميل أو اختر من القائمة أدناه:")
+    search = st.text_input("🔎 ابحث باسم العميل:")
     
     if not df_cust.empty:
         if search:
-            # فلترة البيانات بناءً على الاسم
             display_df = df_cust[df_cust['Name'].str.contains(search, case=False, na=False)]
         else:
             display_df = df_cust
             
         if not display_df.empty:
             for idx, row in display_df.iterrows():
-                row_idx = idx + 2 # +2 عشان الهيدر والـ Index بيبدأ من 0
-                
-                with st.expander(f"👤 {row['Name']} - {row.get('Phone', '')}"):
-                    with st.form(f"edit_meas_{row_idx}"):
+                # طريقة آمنة جداً: بنخلي جوجل شيت هو اللي يحدد السطر فين بالظبط بالاسم
+                with st.expander(f"👤 {row['Name']}"):
+                    with st.form(f"edit_meas_{idx}"): # استخدمنا idx كـ ID فريد للفورم
                         c1, c2, c3 = st.columns(3)
                         
-                        # العمود الأول
-                        new_chest = c1.text_input("دوران الصدر", value=row.get('Chest', ''))
-                        new_waist = c1.text_input("دوران الوسط", value=row.get('Waist', ''))
-                        new_dart = c1.text_input("بنسة الصدر", value=row.get('Chest_Dart', ''))
-                        new_thigh = c1.text_input("عرض الفخذ", value=row.get('Thigh_Width', ''))
+                        new_chest = c1.text_input("دوران الصدر", value=str(row.get('Chest', '')))
+                        new_waist = c1.text_input("دوران الوسط", value=str(row.get('Waist', '')))
+                        new_dart = c1.text_input("بنسة الصدر", value=str(row.get('Chest_Dart', '')))
+                        new_thigh = c1.text_input("عرض الفخذ", value=str(row.get('Thigh_Width', '')))
                         
-                        # العمود الثاني
-                        new_len = c2.text_input("الطول الكلي", value=row.get('Length', ''))
-                        new_sleeve = c2.text_input("عرض الكم", value=row.get('Sleeve_Width', ''))
-                        new_neck = c2.text_input("طول الرقبة للوسط", value=row.get('Neck_to_Waist', ''))
-                        new_inseam = c2.text_input("الحجر الداخلي", value=row.get('Inseam', ''))
+                        new_len = c2.text_input("الطول الكلي", value=str(row.get('Length', '')))
+                        new_sleeve = c2.text_input("عرض الكم", value=str(row.get('Sleeve_Width', '')))
+                        new_neck = c2.text_input("طول الرقبة للوسط", value=str(row.get('Neck_to_Waist', '')))
+                        new_inseam = c2.text_input("الحجر الداخلي", value=str(row.get('Inseam', '')))
                         
-                        # العمود الثالث
-                        new_waist_bot = c3.text_input("طول الوسط لأسفل", value=row.get('Waist_to_Bottom', ''))
-                        new_hips = c3.text_input("دوران الأرداف", value=row.get('Hips', ''))
-                        new_crotch = c3.text_input("الحجر", value=row.get('Crotch', ''))
-                        new_thigh_knee = c3.text_input("طول الفخذ للركبة", value=row.get('Thigh_to_Knee', ''))
-                        
-                        # خانة الملاحظات
-                        new_notes = st.text_area("ملاحظات", value=row.get('Notes', ''))
+                        new_waist_bot = c3.text_input("طول الوسط لأسفل", value=str(row.get('Waist_to_Bottom', '')))
+                        new_hips = c3.text_input("دوران الأرداف", value=str(row.get('Hips', '')))
+                        new_crotch = c3.text_input("الحجر", value=str(row.get('Crotch', '')))
+                        new_thigh_knee = c3.text_input("طول الفخذ للركبة", value=str(row.get('Thigh_to_Knee', '')))
+                        new_notes = st.text_area("ملاحظات", value=str(row.get('Notes', '')))
                         
                         if st.form_submit_button("💾 تحديث المقاسات"):
-                            # بنجمع كل الداتا في قائمة واحدة (بالترتيب من D لـ P)
+                            # البحث الفعلي عن رقم السطر في الشيت (أدق من الحسابات)
+                            cell = customers_sheet.find(row['Name'])
+                            actual_row_idx = cell.row
+                            
                             updated_values = [
                                 new_chest, new_waist, new_dart, new_thigh, 
                                 new_len, new_sleeve, new_neck, new_inseam, 
                                 new_waist_bot, new_hips, new_crotch, new_thigh_knee, new_notes
                             ]
                             
-                            # تحديث السطر كله مرة واحدة بـ أمر واحد (مستحيل يتلخبط)
                             try:
-                                customers_sheet.update(f"D{row_idx}:P{row_idx}", [updated_values])
+                                # التحديث الآمن
+                                customers_sheet.update(f"D{actual_row_idx}:P{actual_row_idx}", [updated_values])
                                 st.success(f"تم تحديث بيانات {row['Name']} بنجاح!")
-                                st.rerun() 
+                                st.rerun()
                             except Exception as e:
-                                st.error(f"حدث خطأ أثناء التحديث: {e}")
+                                st.error(f"خطأ في الاتصال بالشيت: {e}")
         else:
             st.warning("لا يوجد عملاء بهذا الاسم.")
     else:
