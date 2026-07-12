@@ -183,7 +183,6 @@ elif choice == "💰 الحسابات والطلبات":
 # --- 4. الطلبات المكتملة ---
 elif choice == "📦 الطلبات المكتملة":
     st.title("📦 أرشيف الطلبات المكتملة")
-    @st.cache_data(ttl=3600)
     df_comp = get_data(completed_sheet)
     st.dataframe(df_comp)
 
