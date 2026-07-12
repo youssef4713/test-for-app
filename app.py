@@ -106,34 +106,15 @@ elif choice == "💰 الحسابات والطلبات":
         with st.form("add_new_booking"):
             df_cust = get_data(customers_sheet)
             cust_names = df_cust['Name'].tolist() if not df_cust.empty else []
+            new_name = st.selectbox("اختر اسم العميل:", cust_names)
             
-            # التعديل هنا: إضافة index=None عشان ميبقاش فيه اختيار تلقائي
-            new_name = st.selectbox("اختر اسم العميل:", cust_names, index=None, placeholder="اختر العميل من القائمة...")
-            
+            # إضافة حقل اختيار التاريخ
             delivery_date = st.date_input("📅 تاريخ التسليم المتوقع:")
+            
             details = st.text_area("تفاصيل الطلب:")
             total_price = st.number_input("السعر الكلي:", min_value=0)
             paid_amount = st.number_input("المبلغ المدفوع:", min_value=0)
             
-            if st.form_submit_button("✅ إضافة الطلب"):
-                # التعديل هنا: التحقق من وجود اسم عميل
-                if new_name is None:
-                    st.error("⚠️ من فضلك اختر اسم العميل أولاً!")
-                else:
-                    remaining = total_price - paid_amount
-                    bookings_sheet.append_row([
-                        new_name, 
-                        datetime.now().strftime("%Y-%m-%d"), 
-                        delivery_date.strftime("%Y-%m-%d"), 
-                        "تحت التنفيذ", 
-                        details, 
-                        total_price, 
-                        paid_amount, 
-                        remaining
-                    ])
-                    st.success(f"تم إضافة الطلب للعميل {new_name} بنجاح!")
-                    st.rerun()
-                    
             if st.form_submit_button("✅ إضافة الطلب"):
                 remaining = total_price - paid_amount
                 # حفظ البيانات مع التاريخ الجديد
