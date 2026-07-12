@@ -30,10 +30,6 @@ choice = st.sidebar.selectbox("🧭 القائمة الرئيسية:",
                               ["📊 لوحة التحكم", "➕ تسجيل عميلة جديدة", "💰 الحسابات والطلبات", "📦 الطلبات المكتملة", "🔍 بحث علي عميل و تعديل"])
 
 # --- 1. لوحة التحكم (KPIs) ---
-@st.cache_data(ttl=600) 
-def get_data(sheet):
-    raw_data = sheet.get_all_values()
-
 if choice == "📊 لوحة التحكم":
     st.title("📊 لوحة التحكم - الأتيليه")
     
