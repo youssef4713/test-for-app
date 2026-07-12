@@ -183,7 +183,7 @@ elif choice == "💰 الحسابات والطلبات":
 
     st.markdown("---")
     
-    # 2. تعديل ومعالجة الطلبات
+# 2. تعديل ومعالجة الطلبات
     st.header("⚙️ تعديل ومعالجة الطلبات")
     df_book = get_data(bookings_sheet)
     
@@ -193,7 +193,17 @@ elif choice == "💰 الحسابات والطلبات":
         df_book.columns = ['Booking_ID', 'Name', 'Registration_Date', 'Delivery_Date', 'Status', 'Dress_Details', 'Total_Price', 'Paid', 'Remaining']
         
         for idx, row in df_book.iterrows():
-            with st.expander(f"👗 {row['Name']} | الحالة: {row['Status']} | المتبقي: {row['Remaining']} ج.م"):
+            # --- تعديل العنوان هنا ---
+            # بناخد أول 20 حرف من التفاصيل عشان العنوان يفضل شكله شيك
+            short_details = str(row['Dress_Details'])
+            if len(short_details) > 20:
+                short_details = short_details[:20] + "..."
+            
+            # العنوان دلوقتي بقى فيه ID + الاسم + التفاصيل المختصرة + المتبقي
+            expander_title = f"🆔 {row['Booking_ID']} | {row['Name']} | {short_details} | المتبقي: {row['Remaining']} ج.م"
+            
+            with st.expander(expander_title):
+                # -----------------------
                 with st.form(key=f"form_{row['Booking_ID']}"):
                     c1, c2 = st.columns(2)
                     
@@ -229,7 +239,7 @@ elif choice == "💰 الحسابات والطلبات":
                             bookings_sheet.update(f"E{cell.row}:I{cell.row}", [[new_status, row['Dress_Details'], new_total, new_paid, new_remaining]])
                             st.success("تم التحديث بنجاح!")
                         st.rerun()
-
+                        
     # 3. قائمة الطلبات الحالية
     st.markdown("---")
     st.header("📋 قائمة الطلبات الحالية (نظرة سريعة)")
