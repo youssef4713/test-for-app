@@ -283,34 +283,31 @@ elif choice == "🔍 بحث علي عميل و تعديل":
                         new_waist_bot = c3.text_input("طول الوسط لأسفل", value=row.get('Waist_to_Bottom', ''))
                         new_hips = c3.text_input("دوران الأرداف", value=row.get('Hips', ''))
                         new_crotch = c3.text_input("الحجر", value=row.get('Crotch', ''))
-                        new_thigh_knee = c3.text_input("طول الفخذ للركبة", value=row.get('thigh_length_k', ''))
+                        new_thigh_knee = c3.text_input("طول الفخذ للركبة", value=row.get('Thigh_to_Knee', ''))
                         
                         # خانة الملاحظات
                         new_notes = st.text_area("ملاحظات", value=row.get('Notes', ''))
                         
                         if st.form_submit_button("💾 تحديث المقاسات"):
-                            # *** راجع الأرقام دي كويس جداً حسب ترتيب الشيت عندك ***
-                            customers_sheet.update_cell(row_idx, 4, new_chest)
-                            customers_sheet.update_cell(row_idx, 5, new_waist)
-                            customers_sheet.update_cell(row_idx, 6, new_dart)
-                            customers_sheet.update_cell(row_idx, 7, new_thigh)
-                            customers_sheet.update_cell(row_idx, 8, new_len)
-                            customers_sheet.update_cell(row_idx, 9, new_sleeve)
-                            customers_sheet.update_cell(row_idx, 10, new_neck)
-                            customers_sheet.update_cell(row_idx, 11, new_inseam)
-                            customers_sheet.update_cell(row_idx, 12, new_waist_bot)
-                            customers_sheet.update_cell(row_idx, 13, new_hips)
-                            customers_sheet.update_cell(row_idx, 14, new_crotch)
-                            customers_sheet.update_cell(row_idx, 15, new_thigh_knee)
-                            customers_sheet.update_cell(row_idx, 16, new_notes)
+                            # بنجمع كل الداتا في قائمة واحدة (بالترتيب من D لـ P)
+                            updated_values = [
+                                new_chest, new_waist, new_dart, new_thigh, 
+                                new_len, new_sleeve, new_neck, new_inseam, 
+                                new_waist_bot, new_hips, new_crotch, new_thigh_knee, new_notes
+                            ]
                             
-                            st.success(f"تم تحديث بيانات {row['Name']} بنجاح!")
-                            st.rerun() # عشان يسمع التعديل فوراً في الشاشة
+                            # تحديث السطر كله مرة واحدة بـ أمر واحد (مستحيل يتلخبط)
+                            try:
+                                customers_sheet.update(f"D{row_idx}:P{row_idx}", [updated_values])
+                                st.success(f"تم تحديث بيانات {row['Name']} بنجاح!")
+                                st.rerun() 
+                            except Exception as e:
+                                st.error(f"حدث خطأ أثناء التحديث: {e}")
         else:
             st.warning("لا يوجد عملاء بهذا الاسم.")
     else:
         st.info("لا توجد بيانات عملاء لعرضها.")
-
+        
 #------------حساب العميل----------------
 elif choice == "👤 حساب العميل":
     st.title("👤 حساب العميل (سجل كامل)")
