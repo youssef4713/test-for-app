@@ -132,6 +132,38 @@ elif choice == "💰 الحسابات والطلبات":
     st.write("---")
 
     # 2. قسم عرض وتعديل الطلبات
+elif choice == "💰 الحسابات والطلبات":
+    st.title("💰 الحسابات والطلبات")
+
+    # 1. قسم إضافة طلب جديد
+    with st.expander("➕ إضافة طلب جديد"):
+        with st.form("add_new_booking", clear_on_submit=True):
+            df_cust = get_data(customers_sheet)
+            cust_names = df_cust['Name'].tolist() if not df_cust.empty else []
+            new_name = st.selectbox("اختر اسم العميل:", cust_names, index=None, placeholder="اختر العميل...")
+
+            delivery_date = st.date_input("📅 تاريخ التسليم المتوقع:")
+            details = st.text_area("تفاصيل الطلب:")
+            total_price = st.number_input("السعر الكلي:", min_value=0)
+            paid_amount = st.number_input("المبلغ المدفوع:", min_value=0)
+
+            if st.form_submit_button("✅ إضافة الطلب"):
+                if new_name is None:
+                    st.error("⚠️ من فضلك اختر اسم العميل أولاً!")
+                else:
+                    booking_id = int(datetime.now().timestamp())
+                    remaining = total_price - paid_amount
+                    bookings_sheet.append_row([
+                        str(booking_id), new_name, datetime.now().strftime("%Y-%m-%d"),
+                        delivery_date.strftime("%Y-%m-%d"), "تحت التنفيذ", details,
+                        float(total_price), float(paid_amount), float(remaining)
+                    ])
+                    st.success("تم إضافة الطلب بنجاح!")
+                    st.rerun()
+
+    st.write("---")
+
+    # 2. قسم عرض وتعديل الطلبات
     df_book = get_data(bookings_sheet)
 
     if df_book.empty:
@@ -175,7 +207,7 @@ elif choice == "💰 الحسابات والطلبات":
                         else:
                             st.success("تم تحديث البيانات!")
                         st.rerun()
-
+                        
 # --- 4. الطلبات المكتملة ---
 elif choice == "📦 الطلبات المكتملة":
     st.title("📦 أرشيف الطلبات المكتملة")
@@ -184,5 +216,45 @@ elif choice == "📦 الطلبات المكتملة":
 
 # --- 5. بحث ---
 elif choice == "🔍 بحث علي عميل و تعديل":
-    st.title("🔍 بحث")
-    # (كود البحث كما هو)
+    st.title("🔍 بحث علي عميل و تعديل")
+    
+    df_cust = get_data(customers_sheet)
+    search = st.text_input("🔎 ابحث باسم العميل أو اختر من القائمة أدناه:")
+    
+    if not df_cust.empty:
+        if search:
+            display_df = df_cust[df_cust['Name'].str.contains(search, case=False, na=False)]
+        else:
+            display_df = df_cust
+            
+        if not display_df.empty:
+            for idx, row in display_df.iterrows():
+                row_idx = idx + 2 
+                
+                with st.expander(f"👤 {row['Name']} - {row.get('Phone', '')}"):
+                    with st.form(f"edit_meas_{row_idx}"):
+                        c1, c2, c3 = st.columns(3)
+                        new_chest = c1.text_input("دوران الصدر", value=row.get('Chest', ''))
+                        new_waist = c1.text_input("دوران الوسط", value=row.get('Waist', ''))
+                        new_dart = c1.text_input("بنسة الصدر", value=row.get('Chest_Dart', ''))
+                        
+                        new_len = c2.text_input("الطول الكلي", value=row.get('Length', ''))
+                        new_sleeve = c2.text_input("عرض الكم", value=row.get('Sleeve_Width', ''))
+                        new_neck = c2.text_input("طول الرقبة للوسط", value=row.get('Neck_to_Waist', ''))
+                        
+                        new_waist_bot = c3.text_input("طول الوسط لأسفل", value=row.get('Waist_to_Bottom', ''))
+                        new_hips = c3.text_input("دوران الأرداف", value=row.get('Hips', ''))
+                        new_crotch = c3.text_input("الحجر", value=row.get('Crotch', ''))
+                        
+                        new_notes = st.text_area("ملاحظات", value=row.get('Notes', ''))
+                        
+                        if st.form_submit_button("💾 تحديث المقاسات"):
+                            customers_sheet.update_cell(row_idx, 4, new_chest)
+                            customers_sheet.update_cell(row_idx, 5, new_waist)
+                            customers_sheet.update_cell(row_idx, 6, new_hips)
+                            customers_sheet.update_cell(row_idx, 7, new_len)
+                            st.success(f"تم تحديث بيانات {row['Name']}!")
+        else:
+            st.warning("لا يوجد عملاء بهذا الاسم.")
+    else:
+        st.info("لا توجد بيانات عملاء لعرضها.")
