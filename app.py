@@ -146,20 +146,38 @@ elif choice == "💰 الحسابات والطلبات":
             status_val = row.get('Status', 'تحت التنفيذ')
             
             # عرض التاريخ في عنوان الـ Expander للسهولة
-            with st.expander(f"👗 {name_val} | ⏳ التسليم: {deliv_date} | الحالة: {status_val}"):
-                st.markdown(f"📅 **تاريخ الحجز:** {reg_date}  |  🚀 **تاريخ التسليم المتوقع:** `{deliv_date}`")
-                
-                with st.form(f"edit_{row_idx}"):
-                    new_details = st.text_area("تفاصيل الطلب:", value=row.get('Dress_Details', ''))
-                    new_deliv_date = st.date_input("تعديل تاريخ التسليم:", value=pd.to_datetime(deliv_date))
+with st.expander("➕ إضافة طلب جديد"):
+        with st.form("add_new_booking"):
+            df_cust = get_data(customers_sheet)
+            cust_names = df_cust['Name'].tolist() if not df_cust.empty else []
+            
+            # التعديل هنا: إضافة index=None عشان ميبقاش فيه اختيار تلقائي
+            new_name = st.selectbox("اختر اسم العميل:", cust_names, index=None, placeholder="اختر العميل من القائمة...")
+            
+            delivery_date = st.date_input("📅 تاريخ التسليم المتوقع:")
+            details = st.text_area("تفاصيل الطلب:")
+            total_price = st.number_input("السعر الكلي:", min_value=0)
+            paid_amount = st.number_input("المبلغ المدفوع:", min_value=0)
+            
+            if st.form_submit_button("✅ إضافة الطلب"):
+                # التعديل هنا: التحقق من وجود اسم عميل
+                if new_name is None:
+                    st.error("⚠️ من فضلك اختر اسم العميل أولاً!")
+                else:
+                    remaining = total_price - paid_amount
+                    bookings_sheet.append_row([
+                        new_name, 
+                        datetime.now().strftime("%Y-%m-%d"), 
+                        delivery_date.strftime("%Y-%m-%d"), 
+                        "تحت التنفيذ", 
+                        details, 
+                        total_price, 
+                        paid_amount, 
+                        remaining
+                    ])
+                    st.success(f"تم إضافة الطلب للعميل {new_name} بنجاح!")
+                    st.rerun()
                     
-                    # (باقي كود التعديل بنفس المنطق...)
-                    # ملاحظة: عند التحديث، تأكد إنك بتحدث الخلية رقم 3 (Delivery_Date) في الشيت
-                    if st.form_submit_button("💾 تحديث الطلب"):
-                        bookings_sheet.update_cell(row_idx, 3, new_deliv_date.strftime("%Y-%m-%d"))
-                        st.success("تم تحديث تاريخ التسليم!")
-                        st.rerun()
-                        
 # --- 4. الطلبات المكتملة ---
 elif choice == "📦 الطلبات المكتملة":
     st.title("📦 أرشيف الطلبات المكتملة")
