@@ -35,8 +35,8 @@ if choice == "📊 لوحة التحكم":
     st.title("📊 لوحة التحكم - الأتيليه")
     
     # دالة لجلب وتنظيف البيانات الخاصة بلوحة التحكم فقط
+    @st.cache_data(ttl=3600)
     def get_clean_df(sheet):
-        @st.cache_data(ttl=3600)
         df = get_data(sheet)
         if df.empty:
             return pd.DataFrame(columns=['Booking_ID', 'Name', 'Registration_Date', 'Delivery_Date', 'Status', 'Dress_Details', 'Total_Price', 'Paid', 'Remaining'])
