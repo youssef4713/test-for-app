@@ -193,17 +193,14 @@ elif choice == "💰 الحسابات والطلبات":
         df_book.columns = ['Booking_ID', 'Name', 'Registration_Date', 'Delivery_Date', 'Status', 'Dress_Details', 'Total_Price', 'Paid', 'Remaining']
         
         for idx, row in df_book.iterrows():
-            # --- تعديل العنوان هنا ---
-            # بناخد أول 20 حرف من التفاصيل عشان العنوان يفضل شكله شيك
+            # تظبيط العنوان
             short_details = str(row['Dress_Details'])
             if len(short_details) > 20:
                 short_details = short_details[:20] + "..."
             
-            # العنوان دلوقتي بقى فيه ID + الاسم + التفاصيل المختصرة + المتبقي
             expander_title = f"🆔 {row['Booking_ID']} | {row['Name']} | {short_details} | المتبقي: {row['Remaining']} ج.م"
             
             with st.expander(expander_title):
-                # -----------------------
                 with st.form(key=f"form_{row['Booking_ID']}"):
                     c1, c2 = st.columns(2)
                     
@@ -213,13 +210,14 @@ elif choice == "💰 الحسابات والطلبات":
                     new_status = c1.selectbox("الحالة:", status_options, index=current_status_idx)
                     new_total = c2.number_input("السعر الكلي:", value=float(row['Total_Price']))
                     
-                    # عرض المبلغ المدفوع الحالي (مقفول)
+                    # --- الجزء الجديد: عرض وتعديل تفاصيل الطلب ---
+                    new_details = st.text_area("تفاصيل الطلب:", value=row['Dress_Details'])
+                    
+                    # عرض المبلغ المدفوع الحالي
                     st.number_input("المبلغ المدفوع حالياً:", value=float(row['Paid']), disabled=True)
                     
-                    # خانة إضافة مبلغ جديد
                     additional_payment = c1.number_input("إضافة مبلغ جديد:", min_value=0.0, value=0.0)
                     
-                    # حساب المبلغ المدفوع الجديد والمتبقي
                     new_paid = float(row['Paid']) + additional_payment
                     new_remaining = new_total - new_paid
                     c2.info(f"المتبقي بعد الإضافة: {new_remaining} ج.م")
@@ -228,15 +226,14 @@ elif choice == "💰 الحسابات والطلبات":
                         cell = bookings_sheet.find(str(row['Booking_ID']))
                         
                         if new_status == "تم التسليم":
-                            # لو تم التسليم، نفترض إنه سدد الباقي
                             final_paid = new_total 
                             final_remaining = 0
-                            completed_sheet.append_row([str(row['Booking_ID']), row['Name'], row['Registration_Date'], row['Delivery_Date'], "تم التسليم", row['Dress_Details'], new_total, final_paid, final_remaining])
+                            completed_sheet.append_row([str(row['Booking_ID']), row['Name'], row['Registration_Date'], row['Delivery_Date'], "تم التسليم", new_details, new_total, final_paid, final_remaining])
                             bookings_sheet.delete_rows(cell.row)
                             st.success("تم التسليم والترحيل للأرشيف!")
                         else:
-                            # تحديث بالقيم الجديدة المحسوبة
-                            bookings_sheet.update(f"E{cell.row}:I{cell.row}", [[new_status, row['Dress_Details'], new_total, new_paid, new_remaining]])
+                            # تحديث باستخدام new_details بدل row['Dress_Details']
+                            bookings_sheet.update(f"E{cell.row}:I{cell.row}", [[new_status, new_details, new_total, new_paid, new_remaining]])
                             st.success("تم التحديث بنجاح!")
                         st.rerun()
                         
