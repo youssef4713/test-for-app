@@ -175,14 +175,14 @@ elif choice == "💰 الحسابات والطلبات":
                     booking_id = int(datetime.now().timestamp())
                     remaining = total_price - paid_amount
                     bookings_sheet.append_row([str(booking_id), new_name, datetime.now().strftime("%Y-%m-%d"), 
-                                               delivery_date.strftime("%Y-%m-%d"), "تحت التنفيذ", details, 
-                                               float(total_price), float(paid_amount), float(remaining)])
+                                             delivery_date.strftime("%Y-%m-%d"), "تحت التنفيذ", details, 
+                                             float(total_price), float(paid_amount), float(remaining)])
                     st.success("تم إضافة الطلب!")
                     st.rerun()
 
     st.markdown("---")
     
-    # 2. تعديل ومعالجة الطلبات (جت في الأول عشان هي الأهم)
+    # 2. تعديل ومعالجة الطلبات
     st.header("⚙️ تعديل ومعالجة الطلبات")
     df_book = get_data(bookings_sheet)
     
@@ -191,7 +191,6 @@ elif choice == "💰 الحسابات والطلبات":
     else:
         df_book.columns = ['Booking_ID', 'Name', 'Registration_Date', 'Delivery_Date', 'Status', 'Dress_Details', 'Total_Price', 'Paid', 'Remaining']
         
-        # حلقة التعديل للطلبات
         for idx, row in df_book.iterrows():
             with st.expander(f"👗 {row['Name']} | الحالة: {row['Status']} | المتبقي: {row['Remaining']} ج.م"):
                 with st.form(key=f"form_{row['Booking_ID']}"):
@@ -202,32 +201,40 @@ elif choice == "💰 الحسابات والطلبات":
                     
                     new_status = c1.selectbox("الحالة:", status_options, index=current_status_idx)
                     new_total = c2.number_input("السعر الكلي:", value=float(row['Total_Price']))
-                    new_paid = c1.number_input("المبلغ المدفوع:", value=float(row['Paid']))
                     
-                    # الحساب الأوتوماتيك للمتبقي
+                    # عرض المبلغ المدفوع الحالي (مقفول)
+                    st.number_input("المبلغ المدفوع حالياً:", value=float(row['Paid']), disabled=True)
+                    
+                    # خانة إضافة مبلغ جديد
+                    additional_payment = c1.number_input("إضافة مبلغ جديد:", min_value=0.0, value=0.0)
+                    
+                    # حساب المبلغ المدفوع الجديد والمتبقي
+                    new_paid = float(row['Paid']) + additional_payment
                     new_remaining = new_total - new_paid
-                    c2.info(f"المتبقي: {new_remaining} ج.م")
+                    c2.info(f"المتبقي بعد الإضافة: {new_remaining} ج.م")
 
                     if st.form_submit_button("💾 تحديث الطلب"):
                         cell = bookings_sheet.find(str(row['Booking_ID']))
                         
                         if new_status == "تم التسليم":
-                            new_paid = new_total
-                            new_remaining = 0
-                            completed_sheet.append_row([str(row['Booking_ID']), row['Name'], row['Registration_Date'], row['Delivery_Date'], "تم التسليم", row['Dress_Details'], new_total, new_total, 0])
+                            # لو تم التسليم، نفترض إنه سدد الباقي
+                            final_paid = new_total 
+                            final_remaining = 0
+                            completed_sheet.append_row([str(row['Booking_ID']), row['Name'], row['Registration_Date'], row['Delivery_Date'], "تم التسليم", row['Dress_Details'], new_total, final_paid, final_remaining])
                             bookings_sheet.delete_rows(cell.row)
                             st.success("تم التسليم والترحيل للأرشيف!")
                         else:
+                            # تحديث بالقيم الجديدة المحسوبة
                             bookings_sheet.update(f"E{cell.row}:I{cell.row}", [[new_status, row['Dress_Details'], new_total, new_paid, new_remaining]])
-                            st.success("تم التحديث!")
+                            st.success("تم التحديث بنجاح!")
                         st.rerun()
 
-    # 3. قائمة الطلبات الحالية (نزلت تحت التعديل)
+    # 3. قائمة الطلبات الحالية
     st.markdown("---")
     st.header("📋 قائمة الطلبات الحالية (نظرة سريعة)")
     if not df_book.empty:
         st.dataframe(df_book[['Name', 'Status', 'Total_Price', 'Paid', 'Remaining']], use_container_width=True)
-
+        
 # --- 4. الطلبات المكتملة ---
 elif choice == "📦 الطلبات المكتملة":
     st.title("📦 أرشيف الطلبات المكتملة")
