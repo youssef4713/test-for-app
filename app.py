@@ -245,11 +245,7 @@ elif choice == "📦 الطلبات المكتملة":
 # --- 5. بحث ---
 elif choice == "🔍 بحث علي عميل و تعديل":
     st.title("🔍 بحث علي عميل و تعديل")
-    
-    # جلب البيانات
     df_cust = get_data(customers_sheet)
-    
-    # مربع البحث
     search = st.text_input("🔎 ابحث باسم العميل:")
     
     if not df_cust.empty:
@@ -260,12 +256,10 @@ elif choice == "🔍 بحث علي عميل و تعديل":
             
         if not display_df.empty:
             for idx, row in display_df.iterrows():
-                # استخدام الاسم لفتح العميل
                 with st.expander(f"👤 {row['Name']}"):
                     with st.form(f"edit_meas_{idx}"):
                         c1, c2, c3 = st.columns(3)
                         
-                        # نستخدم str() عشان نضمن إن الداتا دايماً نص وميختفيش حاجة
                         new_chest = c1.text_input("دوران الصدر", value=str(row.get('Chest', '')))
                         new_waist = c1.text_input("دوران الوسط", value=str(row.get('Waist', '')))
                         new_dart = c1.text_input("بنسة الصدر", value=str(row.get('Chest_Dart', '')))
@@ -280,35 +274,31 @@ elif choice == "🔍 بحث علي عميل و تعديل":
                         new_hips = c3.text_input("دوران الأرداف", value=str(row.get('Hips', '')))
                         new_crotch = c3.text_input("الحجر", value=str(row.get('Crotch', '')))
                         new_thigh_knee = c3.text_input("طول الفخذ للركبة", value=str(row.get('Thigh_to_Knee', '')))
-                        
                         new_notes = st.text_area("ملاحظات", value=str(row.get('Notes', '')))
                         
+                        # --- هنا الجزء الجديد ---
                         if st.form_submit_button("💾 تحديث المقاسات"):
-                            # البحث الفعلي عن العميل في الشيت عشان نضمن رقم السطر 100%
-                            try:
-                                cell = customers_sheet.find(row['Name'])
-                                actual_row_idx = cell.row
-                                
-                                # ترتيب القيم بالظبط زي الأعمدة من D لـ P
-                                updated_values = [
-                                    new_chest, new_waist, new_dart, new_thigh, 
-                                    new_len, new_sleeve, new_neck, new_inseam, 
-                                    new_waist_bot, new_hips, new_crotch, new_thigh_knee, new_notes
-                                ]
-                                
-                                # تحديث النطاق كامل
-                                customers_sheet.update(f"D{actual_row_idx}:P{actual_row_idx}", [updated_values])
-                                
-                                st.success(f"تم تحديث بيانات {row['Name']} بنجاح!")
-                                st.rerun()
-                                
-                            except Exception as e:
-                                st.error(f"حدث خطأ أثناء التحديث (تأكد من اسم العميل): {e}")
-        else:
-            st.warning("لا يوجد عملاء بهذا الاسم.")
-    else:
-        st.info("لا توجد بيانات عملاء لعرضها.")
-        
+                            updated_values = [
+                                new_chest, new_waist, new_dart, new_thigh, 
+                                new_len, new_sleeve, new_neck, new_inseam, 
+                                new_waist_bot, new_hips, new_crotch, new_thigh_knee, new_notes
+                            ]
+                            st.write("### ⚠️ راجع البيانات قبل الحفظ:")
+                            st.write(updated_values)
+                            st.session_state['pending_update'] = updated_values
+                            st.session_state['row_name'] = row['Name']
+                        
+                        if 'pending_update' in st.session_state and st.session_state.get('row_name') == row['Name']:
+                            if st.button("✅ تأكيد وحفظ التعديلات نهائياً"):
+                                try:
+                                    cell = customers_sheet.find(st.session_state['row_name'])
+                                    customers_sheet.update(f"D{cell.row}:P{cell.row}", [st.session_state['pending_update']])
+                                    st.success("تم الحفظ بنجاح!")
+                                    del st.session_state['pending_update']
+                                    st.rerun()
+                                except Exception as e:
+                                    st.error(f"خطأ: {e}")
+                                    
 #------------حساب العميل----------------
 elif choice == "👤 حساب العميل":
     st.title("👤 حساب العميل (سجل كامل)")
