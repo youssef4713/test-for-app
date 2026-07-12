@@ -75,7 +75,37 @@ if choice == "📊 لوحة التحكم":
     if not df_active.empty:
         st.subheader("تفاصيل الطلبات الحالية:")
         st.dataframe(df_active[['Name', 'Status', 'Remaining']], use_container_width=True)
+
+# --- 2. تسجيل عميلة جديدة ---
+elif choice == "➕ تسجيل عميلة جديدة":
+    st.title("➕ تسجيل عميلة جديدة")
+    with st.form("new_customer", clear_on_submit=True):
+        st.subheader("👤 البيانات الأساسية")
+        col1, col2 = st.columns(2)
+        name = col1.text_input("اسم الزبونة")
+        phone = col2.text_input("التليفون")
         
+        st.subheader("📐 المقاسات")
+        c1, c2, c3 = st.columns(3)
+        chest = c1.text_input("دوران الصدر")
+        waist = c1.text_input("دوران الوسط")
+        chest_dart = c1.text_input("بنسة الصدر")
+        length = c2.text_input("الطول الكلي")
+        sleeve_width = c2.text_input("عرض الكم")
+        neck_to_waist = c2.text_input("طول الرقبة للوسط")
+        waist_to_bottom = c3.text_input("طول الوسط لأسفل")
+        hips = c3.text_input("دوران الأرداف")
+        crotch = c3.text_input("الحجر")
+        inseam = c3.text_input("الحجر الداخلي")
+        thigh_width = c3.text_input("عرض الفخذ")
+        thigh_length_k = c3.text_input("طول الفخذ للركبة")
+        notes = st.text_area("ملاحظات")
+        
+        if st.form_submit_button("💾 حفظ بيانات العميل"):
+            customers_sheet.append_row(["QS-NEW", name, phone, chest, waist, hips, length, neck_to_waist, waist_to_bottom, crotch, inseam, thigh_width, thigh_length_k, chest_dart, sleeve_width, notes, datetime.now().strftime("%Y-%m-%d")])
+            st.success(f"تم حفظ بيانات {name} بنجاح!")
+
+
 # --- 3. الحسابات والطلبات (مع ميزة تعديل الفلوس وأوتوماتيك التسليم) ---
 
 elif choice == "💰 الحسابات والطلبات":
