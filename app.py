@@ -238,42 +238,66 @@ elif choice == "📦 الطلبات المكتملة":
 elif choice == "🔍 بحث علي عميل و تعديل":
     st.title("🔍 بحث علي عميل و تعديل")
     
+    # جلب البيانات
     df_cust = get_data(customers_sheet)
+    
+    # مربع البحث
     search = st.text_input("🔎 ابحث باسم العميل أو اختر من القائمة أدناه:")
     
     if not df_cust.empty:
         if search:
+            # فلترة البيانات بناءً على الاسم
             display_df = df_cust[df_cust['Name'].str.contains(search, case=False, na=False)]
         else:
             display_df = df_cust
             
         if not display_df.empty:
             for idx, row in display_df.iterrows():
-                row_idx = idx + 2 
+                row_idx = idx + 2 # +2 عشان الهيدر والـ Index بيبدأ من 0
                 
                 with st.expander(f"👤 {row['Name']} - {row.get('Phone', '')}"):
                     with st.form(f"edit_meas_{row_idx}"):
                         c1, c2, c3 = st.columns(3)
+                        
+                        # العمود الأول
                         new_chest = c1.text_input("دوران الصدر", value=row.get('Chest', ''))
                         new_waist = c1.text_input("دوران الوسط", value=row.get('Waist', ''))
                         new_dart = c1.text_input("بنسة الصدر", value=row.get('Chest_Dart', ''))
+                        new_thigh = c1.text_input("عرض الفخذ", value=row.get('Thigh_Width', ''))
                         
+                        # العمود الثاني
                         new_len = c2.text_input("الطول الكلي", value=row.get('Length', ''))
                         new_sleeve = c2.text_input("عرض الكم", value=row.get('Sleeve_Width', ''))
                         new_neck = c2.text_input("طول الرقبة للوسط", value=row.get('Neck_to_Waist', ''))
+                        new_inseam = c2.text_input("الحجر الداخلي", value=row.get('Inseam', ''))
                         
+                        # العمود الثالث
                         new_waist_bot = c3.text_input("طول الوسط لأسفل", value=row.get('Waist_to_Bottom', ''))
                         new_hips = c3.text_input("دوران الأرداف", value=row.get('Hips', ''))
                         new_crotch = c3.text_input("الحجر", value=row.get('Crotch', ''))
+                        new_thigh_knee = c3.text_input("طول الفخذ للركبة", value=row.get('Thigh_to_Knee', ''))
                         
+                        # خانة الملاحظات
                         new_notes = st.text_area("ملاحظات", value=row.get('Notes', ''))
                         
                         if st.form_submit_button("💾 تحديث المقاسات"):
+                            # *** راجع الأرقام دي كويس جداً حسب ترتيب الشيت عندك ***
                             customers_sheet.update_cell(row_idx, 4, new_chest)
                             customers_sheet.update_cell(row_idx, 5, new_waist)
-                            customers_sheet.update_cell(row_idx, 6, new_hips)
-                            customers_sheet.update_cell(row_idx, 7, new_len)
-                            st.success(f"تم تحديث بيانات {row['Name']}!")
+                            customers_sheet.update_cell(row_idx, 6, new_dart)
+                            customers_sheet.update_cell(row_idx, 7, new_thigh)
+                            customers_sheet.update_cell(row_idx, 8, new_len)
+                            customers_sheet.update_cell(row_idx, 9, new_sleeve)
+                            customers_sheet.update_cell(row_idx, 10, new_neck)
+                            customers_sheet.update_cell(row_idx, 11, new_inseam)
+                            customers_sheet.update_cell(row_idx, 12, new_waist_bot)
+                            customers_sheet.update_cell(row_idx, 13, new_hips)
+                            customers_sheet.update_cell(row_idx, 14, new_crotch)
+                            customers_sheet.update_cell(row_idx, 15, new_thigh_knee)
+                            customers_sheet.update_cell(row_idx, 16, new_notes)
+                            
+                            st.success(f"تم تحديث بيانات {row['Name']} بنجاح!")
+                            st.rerun() # عشان يسمع التعديل فوراً في الشاشة
         else:
             st.warning("لا يوجد عملاء بهذا الاسم.")
     else:
