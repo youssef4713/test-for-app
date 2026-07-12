@@ -481,8 +481,8 @@ elif choice == "📅 تواريخ التسليم":
                 with st.expander(f"📦 {row['Name']} - موعد التسليم: {delivery_date}"):
                     st.write(f"**اسم العميل:** {row['Name']}")
                     st.write(f"**حالة الطلب:** {row['Status']}")
-                    st.write(f"**المبلغ المتبقي:** {row['Remaining_Amount']} ج.م")
-                    st.write(f"**ملاحظات:** {row['Notes']}")
+                    st.write(f"**المبلغ المتبقي:** {row['Remaining']} ج.م")
+                    st.write(f"**ملاحظات:** {row['Dress_Details']}")
                     # هنا تقدر تضيف زرار "تم التسليم" لو تحب
         else:
             st.success("عاش! لا توجد طلبات معلقة حالياً.")
